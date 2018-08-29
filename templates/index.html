@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>登录</title>
+</head>
+<body>
+    <form action="/post" method="post">
+        <p> <input type="text" name="user" placeholder="jAccount"></p>
+        <p><input type="password" name="passwd" placeholder="密码"></p>
+        <p>
+            <input type="text" name="captcha" placeholder="验证码">
+            <img src="/captcha" alt="验证码">
+        </p>
+        <input type="submit">
+    </form>
+</body>
+</html>

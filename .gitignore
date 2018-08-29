@@ -1,0 +1,3 @@
+mypy3/*
+.vscode/*
+*.pyc
