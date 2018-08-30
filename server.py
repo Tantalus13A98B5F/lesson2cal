@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from urllib import parse
 import datetime as dt
 import logging
 import flask
@@ -12,10 +13,15 @@ app = flask.Flask(__name__)
 manager = ElectSysManager()
 
 
+def redirect_error(msg):
+    return flask.redirect('/?' + parse.urlencode({'error': msg}))
+
+
 @app.route('/')
 def index_view():
+    error = flask.request.args.get('error')
     manager.new_session()
-    return flask.render_template('index.html')
+    return flask.render_template('index.html', error=error)
 
 
 @app.route('/captcha')
@@ -35,7 +41,7 @@ def post_view():
         firstday_raw = flask.request.form['firstday']
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
     except (KeyError, ValueError, TypeError):
-        return '参数错误'
+        return redirect_error('参数错误')
     manager.store_variables()
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
@@ -45,7 +51,7 @@ def post_view():
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
         return response
     else:
-        return error
+        return redirect_error(error)
 
 
 if __name__ == '__main__':

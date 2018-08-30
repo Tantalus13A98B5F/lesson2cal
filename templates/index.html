@@ -7,6 +7,9 @@
     <title>登录</title>
 </head>
 <body>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
     <form action="/post" method="post">
         <p><input type="text" name="user" placeholder="jAccount"></p>
         <p><input type="password" name="passwd" placeholder="密码"></p>
