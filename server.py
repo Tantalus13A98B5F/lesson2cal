@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 import datetime as dt
+import logging
 import flask
 from manager import ElectSysManager
 
 
+logger = logging.getLogger('lesson2cal')
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 app = flask.Flask(__name__)
 manager = ElectSysManager()
 
 
 @app.route('/')
 def index_view():
-    manager.store_variables()
+    manager.new_session()
     return flask.render_template('index.html')
 
 
@@ -32,6 +36,7 @@ def post_view():
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
     except (KeyError, ValueError, TypeError):
         return '参数错误'
+    manager.store_variables()
     if manager.post_credentials(user, passwd, captcha):
         cal = manager.convert_lessons_to_ics(firstday)
         response = flask.make_response(cal.serialize())

@@ -2,7 +2,11 @@ from abc import ABCMeta, abstractmethod
 from functools import wraps
 from random import random
 from urllib import parse
+import logging
 import requests
+
+
+logger = logging.getLogger('lesson2cal')
 
 
 def get_random():
@@ -17,6 +21,7 @@ def with_max_retries(count):
                 try:
                     ret = func(*args, **kwargs)
                 except Exception as e:
+                    logger.info('try %s: %r failed with %r', i, func, e)
                     if i == count - 1:
                         raise e
                 else:
@@ -28,6 +33,9 @@ def with_max_retries(count):
 class JAccountLoginManager(metaclass=ABCMeta):
     def __init__(self, session=None):
         self.session = session or requests.Session()
+    
+    def new_session(self):
+        self.session = requests.Session()
 
     @abstractmethod
     def get_login_url(self) -> str:
@@ -40,6 +48,7 @@ class JAccountLoginManager(metaclass=ABCMeta):
     @with_max_retries(3)
     def store_variables(self) -> {'returl', 'se', 'sid'}:
         rsp = self.session.get(self.get_login_url())
+        logger.info('login page return at: %s', rsp.request.url)
         query = parse.urlsplit(rsp.request.url).query
         qs = parse.parse_qs(query)
         self.variables = {k: qs[k][0] for k in ('returl', 'se', 'sid')}
@@ -56,4 +65,5 @@ class JAccountLoginManager(metaclass=ABCMeta):
         payload = {'user': user, 'pass': passwd, 'captcha': captcha}
         payload.update(self.variables)
         rsp = self.session.post(action_url, payload)
+        logger.info('post return at: %s', rsp.request.url)
         return self.check_login_result(rsp)
