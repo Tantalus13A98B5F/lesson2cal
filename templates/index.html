@@ -21,11 +21,11 @@
   </style>
 </head>
 <body>
-  <div>
+  <div class="main-form">
     {% if error %}
-    <p>{{ error }}</p>
+      <p style="color: red;">{{ error }}</p>
     {% endif %}
-    <form action="/post" method="post" class="main-form">
+    <form action="/post" method="post">
       <div class="row">
         <input type="text" name="user" placeholder="jAccount" class="form-control" required>
       </div>
