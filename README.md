@@ -10,6 +10,8 @@
 pip install -r requirements.txt
 ```
 
+Windows用户可以选择在[Release页面](https://github.com/Tantalus13A98B5F/lesson2cal/releases)下载压缩包，解压即可使用。
+
 ## Usage
 
 ```
@@ -37,6 +39,7 @@ END:VEVENT
 - 密码在前端后端之间明文传输，且线程不安全（共享`manager`），故不建议部署在公网上使用；
 - 为了您的账户安全，不建议使用他人的部署；
 - 目前的时间表示均没有附加时区信息；
+- 形势与政策由于正确的上课时间写在备注里，目前还需要手动编辑；
 
 ## Disclaimer
 
