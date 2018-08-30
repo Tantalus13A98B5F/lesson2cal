@@ -45,6 +45,5 @@ END:VEVENT
 ## To-Do
 
 - use bootstrap
-- browser auto open
 - threading safety
 - time zone for ics

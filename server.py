@@ -3,14 +3,18 @@ from urllib import parse
 import datetime as dt
 import logging
 import flask
+import threading
+import webbrowser
 from manager import ElectSysManager
 
 
 logger = logging.getLogger('lesson2cal')
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
+
 app = flask.Flask(__name__)
 manager = ElectSysManager()
+threading.Timer(2, lambda: webbrowser.open('http://127.0.0.1:5000/')).start()
 
 
 def redirect_error(msg):
@@ -55,4 +59,4 @@ def post_view():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
