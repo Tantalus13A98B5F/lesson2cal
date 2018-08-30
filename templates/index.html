@@ -1,24 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>登录</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <title>登录</title>
+  <style>
+    .main-form {
+      width: 320px;
+      margin: 100px auto 0 auto;
+    }
+    .row {
+      margin: 5px 0;
+    }
+    .form-control {
+      height: 45px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
+  <div>
     {% if error %}
     <p>{{ error }}</p>
     {% endif %}
-    <form action="/post" method="post">
-        <p><input type="text" name="user" placeholder="jAccount"></p>
-        <p><input type="password" name="passwd" placeholder="密码"></p>
-        <p>
-            <input type="text" name="captcha" placeholder="验证码">
-            <img src="/captcha" alt="验证码">
-        </p>
-        <p><input type="text" name="firstday" placeholder="本学期第一周周一的日期，形如2018/09/10"></p>
-        <input type="submit">
+    <form action="/post" method="post" class="main-form">
+      <div class="row">
+        <input type="text" name="user" placeholder="jAccount" class="form-control" required>
+      </div>
+      <div class="row">
+        <input type="password" name="passwd" placeholder="密码" class="form-control" required>
+      </div>
+      <div class="row">
+        <div class="col-xs-8" style="padding:0;">
+          <input type="text" name="captcha" placeholder="验证码" class="form-control" required>
+        </div>
+        <div class="col-xs-4" style="padding-right:0;">
+          <img src="/captcha" alt="验证码" onclick="this.src='/captcha?'+Date.now()+Math.random()">
+        </div>
+      </div>
+      <div class="row">
+        <input type="text" name="firstday" class="form-control" required
+          placeholder="学期第一周周一日期，格式：2018/09/10">
+      </div>
+      <div class="row">
+        <input type="submit" value="提交" class="btn btn-lg btn-primary btn-block">
+      </div>
     </form>
+  </div>
 </body>
 </html>

@@ -47,6 +47,5 @@ END:VEVENT
 
 ## To-Do
 
-- use bootstrap
 - threading safety
 - time zone for ics
