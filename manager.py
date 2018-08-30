@@ -113,8 +113,11 @@ class ElectSysManager(JAccountLoginManager):
         return 'http://electsys.sjtu.edu.cn/edu/login.aspx'
 
     def check_login_result(self, rsp):
+        ret = super().check_login_result(rsp)
+        if ret:
+            return ret
         success_url = 'http://electsys.sjtu.edu.cn/edu/student/sdtMain.aspx'
-        return rsp.request.url == success_url
+        return '' if rsp.request.url == success_url else rsp.request.url
     
     def convert_lessons_to_ics(self, firstday):
         url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'

@@ -37,14 +37,15 @@ def post_view():
     except (KeyError, ValueError, TypeError):
         return '参数错误'
     manager.store_variables()
-    if manager.post_credentials(user, passwd, captcha):
+    error = manager.post_credentials(user, passwd, captcha)
+    if not error:
         cal = manager.convert_lessons_to_ics(firstday)
         response = flask.make_response(cal.serialize())
         response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
         return response
     else:
-        return '登录失败'
+        return error
 
 
 if __name__ == '__main__':

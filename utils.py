@@ -42,8 +42,20 @@ class JAccountLoginManager(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def check_login_result(self, rsp) -> bool:
-        pass
+    def check_login_result(self, rsp) -> 'error':
+        splitted = parse.urlsplit(rsp.request.url)
+        if splitted.netloc == 'jaccount.sjtu.edu.cn':
+            query = parse.parse_qs(splitted.query)
+            err = query.get('err', [None])[0]
+            if err == '0':
+                return '用户名或密码不正确'
+            elif err == '1':
+                return '验证码不正确'
+            elif err == '2':
+                return '服务器故障，请稍后再试'
+            else:
+                return '未知登录错误'
+        return ''
 
     @with_max_retries(3)
     def store_variables(self) -> {'returl', 'se', 'sid'}:
