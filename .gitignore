@@ -1,4 +1,3 @@
 mypy3/*
 .vscode/*
-release/*
 *.pyc
