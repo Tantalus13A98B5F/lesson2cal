@@ -4,6 +4,13 @@
 
 开发中，目前使用网页作为前端；欢迎贡献其他前端！
 
+## Dependencies
+
+- flask
+- vobject
+- requests
+- bs4
+
 ## Usage
 
 ```
