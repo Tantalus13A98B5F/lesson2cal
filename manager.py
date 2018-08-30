@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import datetime as dt
 import re
 from utils import JAccountLoginManager
+from ics import ICSCreator
 
 
 LessonInfo = namedtuple(
@@ -18,6 +19,20 @@ starting_timelist = [
 ]
 ending_timelist = [dt.time(8+i, 40 if i%2 else 45) for i in range(14)]
 lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
+
+
+def generate_ics(lesson_list, firstday):
+    cal = ICSCreator()
+    for item in lesson_list:
+        shift_days = dt.timedelta(days=(item.first_week - 1)*7 + item.weekday)
+        count = (item.last_week - item.first_week) // item.interval + 1
+        dtstart = dt.datetime.combine(firstday, item.start_time) + shift_days
+        dtend = dt.datetime.combine(firstday, item.end_time) + shift_days
+        cal.add_event(
+            '%s@%s' % (item.name, item.location),
+            dtstart, dtend, cal.rrule(item.interval, count)
+        )
+    return cal
 
 
 class LessonTemp:
@@ -101,8 +116,9 @@ class ElectSysManager(JAccountLoginManager):
         success_url = 'http://electsys.sjtu.edu.cn/edu/student/sdtMain.aspx'
         return rsp.request.url == success_url
     
-    def extract_lessons(self):
+    def convert_lessons_to_ics(self, firstday):
         url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
         rsp = self.session.get(url)
         soup = BeautifulSoup(rsp.text, 'html.parser')
-        return extract_lessons_from_soup(soup)
+        lesson_list = extract_lessons_from_soup(soup)
+        return generate_ics(lesson_list, firstday)

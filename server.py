@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import datetime as dt
 import flask
 from manager import ElectSysManager
 
@@ -27,11 +28,13 @@ def post_view():
         user = flask.request.form['user']
         passwd = flask.request.form['passwd']
         captcha = flask.request.form['captcha']
-    except KeyError:
-        return '登录失败'
+        firstday_raw = flask.request.form['firstday']
+        firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
+    except (KeyError, ValueError, TypeError):
+        return '参数错误'
     if manager.post_credentials(user, passwd, captcha):
-        from pprint import pprint
-        pprint(manager.extract_lessons())
+        cal = manager.convert_lessons_to_ics(firstday)
+        cal.serialize('output.ics')
         return '登录成功'
     else:
         return '登录失败'
