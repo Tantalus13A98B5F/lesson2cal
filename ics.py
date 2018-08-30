@@ -13,7 +13,7 @@ class ICSCreator:
         if rrule:
             vevent.add('rrule').value = rrule
     
-    def serialize(self, filename):
+    def serialize(self, filename=None):
         text = self._cal.serialize()
         if filename:
             with open(filename, 'w', encoding='utf-8', newline='') as f:

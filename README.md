@@ -26,7 +26,6 @@ pip install -r requirements.txt
 
 ## To-Do
 
-- download file
 - logging
 - safe reloading
 - threading safety

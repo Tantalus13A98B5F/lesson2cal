@@ -34,8 +34,10 @@ def post_view():
         return '参数错误'
     if manager.post_credentials(user, passwd, captcha):
         cal = manager.convert_lessons_to_ics(firstday)
-        cal.serialize('output.ics')
-        return '登录成功'
+        response = flask.make_response(cal.serialize())
+        response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
+        response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
+        return response
     else:
         return '登录失败'
 
