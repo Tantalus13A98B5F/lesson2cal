@@ -2,7 +2,7 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 import datetime as dt
 import re
-from utils import JAccountLoginManager
+from utils import JAccountLoginManager, take_qs
 from ics import ICSCreator
 
 
@@ -117,8 +117,15 @@ class ElectSysManager(JAccountLoginManager):
         if ret:
             return ret
         success_url = 'http://electsys.sjtu.edu.cn/edu/student/sdtMain.aspx'
-        return '' if rsp.request.url == success_url else rsp.request.url
-    
+        if rsp.request.url == success_url:
+            return ''
+        if 'electsys.sjtu.edu.cn' in rsp.request.url:
+            qs = take_qs(rsp.request.url)
+            msg = qs.get('message', [''])[0]
+            if msg:
+                return 'ElectSys says: ' + msg
+        return '未知错误'
+        
     def convert_lessons_to_ics(self, firstday):
         url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
         rsp = self.session.get(url)

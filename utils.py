@@ -13,6 +13,11 @@ def get_random():
     return random() * 10**8
 
 
+def take_qs(url):
+    splitted = parse.urlsplit(url)
+    return parse.parse_qs(splitted.query)
+
+
 def with_max_retries(count):
     def real_decorator(func):
         @wraps(func)
@@ -43,10 +48,9 @@ class JAccountLoginManager(metaclass=ABCMeta):
 
     @abstractmethod
     def check_login_result(self, rsp) -> 'error':
-        splitted = parse.urlsplit(rsp.request.url)
-        if splitted.netloc == 'jaccount.sjtu.edu.cn':
-            query = parse.parse_qs(splitted.query)
-            err = query.get('err', [None])[0]
+        if 'jaccount.sjtu.edu.cn' in rsp.request.url:
+            qs = take_qs(rsp.request.url)
+            err = qs.get('err', [''])[0]
             if err == '0':
                 return '用户名或密码不正确'
             elif err == '1':
@@ -61,8 +65,7 @@ class JAccountLoginManager(metaclass=ABCMeta):
     def store_variables(self) -> {'returl', 'se', 'sid'}:
         rsp = self.session.get(self.get_login_url())
         logger.info('login page return at: %s', rsp.request.url)
-        query = parse.urlsplit(rsp.request.url).query
-        qs = parse.parse_qs(query)
+        qs = take_qs(rsp.request.url)
         self.variables = {k: qs[k][0] for k in ('returl', 'se', 'sid')}
 
     @with_max_retries(3)
