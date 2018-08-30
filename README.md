@@ -4,12 +4,11 @@
 
 开发中，目前使用网页作为前端；欢迎贡献其他前端！
 
-## Dependencies
+## Installation
 
-- flask
-- vobject
-- requests
-- bs4
+```
+pip install -r requirements.txt
+```
 
 ## Usage
 
@@ -27,8 +26,8 @@
 
 ## To-Do
 
+- download file
 - logging
 - safe reloading
 - threading safety
 - time zone for ics
-- add requirements.txt
