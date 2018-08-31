@@ -1,5 +1,4 @@
 beautifulsoup4==4.6.3  # for page parsing
-bs4==0.0.1
 certifi==2018.8.24
 chardet==3.0.4
 click==6.7
@@ -9,6 +8,7 @@ itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
 python-dateutil==2.7.3
+pytz==2018.5  # for timezone handling
 requests==2.19.1  # for http requests
 six==1.11.0
 urllib3==1.23

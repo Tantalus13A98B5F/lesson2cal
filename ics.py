@@ -1,6 +1,7 @@
 import vobject
 import pytz
 
+
 TIMEZONE = '''
 BEGIN:VTIMEZONE
 TZID:Asia/Shanghai
@@ -11,21 +12,23 @@ TZOFFSETTO:+0800
 END:STANDARD
 END:VTIMEZONE
 '''
+TZAsiaShanghai = pytz.timezone('Asia/Shanghai')
 
 
 class ICSCreator:
     def __init__(self):
         self._cal = vobject.iCalendar()
         self._cal.add(vobject.readOne(TIMEZONE, validate=True))
-        self.tz = pytz.timezone('Asia/Shanghai')
 
-    def add_event(self, title, dtstart, dtend, location=None, rrule=None):
+    def add_event(self, title, dtstart, dtend, location='', description='', rrule=None):
         vevent = self._cal.add('vevent')
         vevent.add('summary').value = title
-        vevent.add('dtstart').value = self.tz.localize(dtstart)
-        vevent.add('dtend').value = self.tz.localize(dtend)
+        vevent.add('dtstart').value = TZAsiaShanghai.localize(dtstart)
+        vevent.add('dtend').value = TZAsiaShanghai.localize(dtend)
         if location:
             vevent.add('location').value = location
+        if description:
+            vevent.add('description').value = description
         if rrule:
             vevent.add('rrule').value = rrule
 

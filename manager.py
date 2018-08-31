@@ -29,7 +29,8 @@ def generate_ics(lesson_list, firstday):
         dtstart = dt.datetime.combine(firstday, item.start_time) + shift_days
         dtend = dt.datetime.combine(firstday, item.end_time) + shift_days
         cal.add_event(
-            item.name, dtstart, dtend, item.location, cal.rrule(item.interval, count)
+            item.name, dtstart, dtend, item.location,
+            rrule=cal.rrule(item.interval, count)
         )
     return cal
 
