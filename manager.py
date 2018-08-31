@@ -7,7 +7,7 @@ from ics import ICSCreator
 
 
 LessonInfo = namedtuple(
-    'LessonInfo', 
+    'LessonInfo',
     [
         'name', 'first_week', 'last_week', 'location',
         'interval', 'start_time', 'end_time', 'weekday'
@@ -17,7 +17,7 @@ starting_timelist = [
     dt.time(7+i, 55) if i % 2 else dt.time(8+i, 0)
     for i in range(14)
 ]
-ending_timelist = [dt.time(8+i, 40 if i%2 else 45) for i in range(14)]
+ending_timelist = [dt.time(8+i, 40 if i % 2 else 45) for i in range(14)]
 lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
 
 
@@ -29,8 +29,7 @@ def generate_ics(lesson_list, firstday):
         dtstart = dt.datetime.combine(firstday, item.start_time) + shift_days
         dtend = dt.datetime.combine(firstday, item.end_time) + shift_days
         cal.add_event(
-            '%s@%s' % (item.name, item.location),
-            dtstart, dtend, cal.rrule(item.interval, count)
+            item.name, dtstart, dtend, item.location, cal.rrule(item.interval, count)
         )
     return cal
 
@@ -125,7 +124,7 @@ class ElectSysManager(JAccountLoginManager):
             if msg:
                 return 'ElectSys says: ' + msg
         return '未知错误'
-        
+
     def convert_lessons_to_ics(self, firstday):
         url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
         rsp = self.session.get(url)

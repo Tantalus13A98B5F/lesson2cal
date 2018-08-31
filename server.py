@@ -14,7 +14,7 @@ logger.addHandler(logging.StreamHandler())
 
 app = flask.Flask(__name__)
 manager = ElectSysManager()
-threading.Timer(2, lambda: webbrowser.open('http://127.0.0.1:5000/')).start()
+threading.Timer(2, lambda: webbrowser.open('http://localhost:5000/')).start()
 
 
 def redirect_error(msg):
