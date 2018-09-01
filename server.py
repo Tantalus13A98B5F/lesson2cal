@@ -23,7 +23,7 @@ def redirect_error(msg):
 
 @app.route('/')
 def index_view():
-    error = flask.request.args.get('error')
+    error = flask.request.args.get('error', '')
     manager.new_session()
     return flask.render_template('index.html', error=error)
 

@@ -4,50 +4,79 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <title>登录</title>
-  <style>
-    .main-form {
-      width: 320px;
-      margin: 100px auto 0 auto;
-    }
-    .row {
-      margin: 5px 0;
-    }
-    .form-control {
-      height: 45px;
-      font-size: 16px;
-    }
-  </style>
+  <title>Lesson2Cal</title>
+  <script src="https://cdn.bootcss.com/babel-polyfill/6.26.0/polyfill.min.js"></script>
+  <script src="https://cdn.bootcss.com/vue/2.5.16/vue.js"></script>
+  <link href="https://cdn.bootcss.com/element-ui/2.4.0/theme-chalk/index.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/element-ui/2.4.0/index.js"></script>
 </head>
 <body>
-  <div class="main-form">
-    {% if error %}
-      <p style="color: red;">{{ error }}</p>
-    {% endif %}
-    <form action="/post" method="post">
-      <div class="row">
-        <input type="text" name="user" placeholder="jAccount" class="form-control" required>
-      </div>
-      <div class="row">
-        <input type="password" name="passwd" placeholder="密码" class="form-control" required>
-      </div>
-      <div class="row">
-        <div class="col-xs-8" style="padding:0;">
-          <input type="text" name="captcha" placeholder="验证码" class="form-control" required>
-        </div>
-        <div class="col-xs-4" style="padding-right:0;">
-          <img src="/captcha" alt="验证码" onclick="this.src='/captcha?'+Date.now()+Math.random()">
-        </div>
-      </div>
-      <div class="row">
-        <input type="text" name="firstday" class="form-control" required
-          placeholder="学期第一周周一日期，格式：2018/09/10">
-      </div>
-      <div class="row">
-        <input type="submit" value="提交" class="btn btn-lg btn-primary btn-block">
-      </div>
-    </form>
+  <div id="app">
+    <el-row type="flex" justify="center">
+      <el-col :span="10">
+        <el-card>
+          <div slot="header">配置以下信息</div>
+          <el-form ref="mainform" method="POST" action="/post" label-position="top">
+            <el-form-item label="jAccount">
+              <el-input name="user" required></el-input>
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input type="password" name="passwd" required></el-input>
+            </el-form-item>
+            <el-form-item>
+              <div slot="label" style="width:150px;">
+                <span>验证码</span>
+                <img style="float:right;" title="点击更换" src="/captcha"
+                  onclick="this.src='/captcha?'+Date.now()+Math.random()">
+              </div>
+              <el-input name="captcha" required></el-input>
+            </el-form-item>
+            <el-form-item label="学期首周周一日期">
+              <!-- 必须v-model，且不支持required -->
+              <el-date-picker style="width:100%;" v-model="firstday" name="firstday"
+                :picker-options="pickerOptions" format="yyyy/MM/dd"></el-date-picker>
+            </el-form-item>
+            <el-button @click="submit">提交</el-button>
+          </el-form>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        firstday: '',
+        pickerOptions: {
+          disabledDate (date) {
+            return date.getDay() != 1
+          }
+        }
+      },
+      methods: {
+        submit () {
+          let form = this.$refs.mainform.$el
+          if (form.checkValidity() && this.firstday.length) {
+            form.submit()
+          } else {
+            this.$message({
+              message: '请填写完所有字段',
+              type: 'warning'
+            })
+          }
+        }
+      },
+      mounted () {
+        // jinja2 arena
+        let error = '{{ error }}'.trim()
+        if (error.length) {
+          this.$message({
+            message: error,
+            type: 'error'
+          })
+        }
+      }
+    })
+  </script>
 </body>
 </html>
