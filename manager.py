@@ -6,6 +6,12 @@ import re
 from utils import *
 
 
+__all__ = [
+    'ElectSysManager', 'NameAtLocPolicy', 'IndependentLocPolicy', 
+    'NoNotesPolicy', 'PEXCNotePolicy', 'FullNotesPolicy'
+]
+
+
 class LessonInfo:
     lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
 
@@ -14,7 +20,7 @@ class LessonInfo:
         self.start_time = start_time
         self.end_time = end_time
         self.description = ''
-        groups = lesson_pattern.fullmatch(text).groups()
+        groups = self.lesson_pattern.fullmatch(text).groups()
         name, firstwk, lastwk, loc, dsz = groups
         self.name = name
         self.first_week = int(firstwk)
@@ -29,8 +35,8 @@ class LessonInfo:
                 self.last_week -= 1
     
     @classmethod
-    def trymerge(cls, pair):
-        a, b = pair
+    def trymerge(cls, lst):
+        a, b = lst
         if a.name == b.name and a.location == b.location and \
                 abs(a.first_week - b.first_week) == 1 and \
                 abs(a.last_week - b.last_week) == 1 and \
@@ -38,8 +44,7 @@ class LessonInfo:
             a.first_week = min(a.first_week, b.first_week)
             a.last_week = max(a.last_week, b.last_week)
             a.interval = 1
-            return (a,)
-        return pair
+            lst.pop()
 
 
 class CalStylePolicyBase(metaclass=ABCMeta):
@@ -80,7 +85,7 @@ class NotesPolicyBase(metaclass=ABCMeta):
     def need_note(self, item) -> bool:
         return False
 
-    def magic_note(self, item) -> 'list of items':
+    def expand_note(self, item) -> 'list of items':
         return [item]
 
 
@@ -92,8 +97,8 @@ class PEXCNotePolicy(NotesPolicyBase):
     def need_note(self, item):
         return any(s in item.name for s in ['体育', '形势与政策'])
 
-    def magic_note(self, item):
-        return super().magic_note(item)
+    def expand_note(self, item):
+        return super().expand_note(item)
 
 
 class FullNotesPolicy(NotesPolicyBase):
@@ -110,7 +115,7 @@ class PageParser:
     base_url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
 
     @classmethod
-    def calc_timespan(cls, rownum, rownspan):
+    def calc_timespan(cls, rownum, rowspan):
         starting = cls.starting_timelist[rownum]
         ending = cls.ending_timelist[rownum + rowspan - 1]
         return starting, ending
@@ -133,7 +138,7 @@ class PageParser:
         for item in converted_iterable:
             if self.noteshandler.need_note(item):
                 self.get_note(item)
-                yield from self.noteshandler.magic_note(item)
+                yield from self.noteshandler.expand_note(item)
             else:
                 yield item
 

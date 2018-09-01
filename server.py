@@ -5,7 +5,7 @@ import logging
 import flask
 import threading
 import webbrowser
-from manager import ElectSysManager
+from manager import *
 
 
 logger = logging.getLogger('lesson2cal')
@@ -45,13 +45,17 @@ def post_view():
         firstday_raw = flask.request.form['firstday']
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
         locstyle = flask.request.form['locstyle']
-        {'name@loc', 'LOC'}.remove(locstyle)
+        locstyle_data = {
+            'name@loc': NameAtLocPolicy,
+            'LOC': IndependentLocPolicy
+        }
+        locstyle_policy = locstyle_data[locstyle]
     except (KeyError, ValueError, TypeError):
         return redirect_error('参数错误')
     manager.store_variables()
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
-        cal = manager.convert_lessons_to_ics(firstday, locstyle)
+        cal = manager.convert_lessons_to_ics(firstday, locstyle_policy, NoNotesPolicy)
         response = flask.make_response(cal.serialize())
         response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
