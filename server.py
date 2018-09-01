@@ -22,6 +22,7 @@ CalStylePolicies = {
 }
 NotesPolicies = {
     'nonotes': NoNotesPolicy,
+    'pexcnotes': PEXCNotePolicy,
     'fullnotes': FullNotesPolicy
 }
 
