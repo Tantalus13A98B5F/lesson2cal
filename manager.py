@@ -1,4 +1,4 @@
-from collections import namedtuple
+from abc import ABCMeta, abstractmethod
 from bs4 import BeautifulSoup
 from urllib import parse
 import datetime as dt
@@ -6,134 +6,187 @@ import re
 from utils import *
 
 
-LessonInfo = namedtuple(
-    'LessonInfo',
-    [
-        'name', 'first_week', 'last_week', 'location',
-        'interval', 'start_time', 'end_time', 'weekday'
-    ]
-)
-starting_timelist = [
-    dt.time(7+i, 55) if i % 2 else dt.time(8+i, 0)
-    for i in range(14)
-]
-ending_timelist = [dt.time(8+i, 40 if i % 2 else 45) for i in range(14)]
-lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
+class LessonInfo:
+    lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
 
-
-def generate_ics(lesson_list, firstday, locstyle):
-    cal = ICSCreator()
-    calc_datetime = school_cal_generator(firstday)
-    for item in lesson_list:
-        count = (item.last_week - item.first_week) // item.interval + 1
-        dtstart = calc_datetime(item.first_week, item.weekday, item.start_time)
-        dtend = calc_datetime(item.first_week, item.weekday, item.end_time)
-        if locstyle == 'name@loc':
-            cal.add_event(
-                '%s@%s' % (item.name, item.location), dtstart, dtend,
-                rrule=cal.rrule(item.interval, count)
-            )
-        else:  # locstyle == 'LOC'
-            cal.add_event(
-                item.name, dtstart, dtend, item.location,
-                rrule=cal.rrule(item.interval, count)
-            )
-    return cal
-
-
-class LessonTemp:
-    def __init__(self, name, first_week, last_week, location, oddeven):
+    def __init__(self, text, weekday, start_time, end_time):
+        self.weekday = weekday
+        self.start_time = start_time
+        self.end_time = end_time
+        self.description = ''
+        groups = lesson_pattern.fullmatch(text).groups()
+        name, firstwk, lastwk, loc, dsz = groups
         self.name = name
-        self.first_week = int(first_week)
-        self.last_week = int(last_week)
-        self.location = location
-        self.interval = 2 if oddeven else 1
-        if oddeven:
-            remainder = 1 if oddeven == '单周' else 0
+        self.first_week = int(firstwk)
+        self.last_week = int(lastwk)
+        self.location = loc
+        self.interval = 2 if dsz else 1
+        if dsz:
+            remainder = 1 if dsz == '单周' else 0
             if self.first_week % 2 != remainder:
                 self.first_week += 1
             if self.last_week % 2 != remainder:
                 self.last_week -= 1
+    
+    @classmethod
+    def trymerge(cls, pair):
+        a, b = pair
+        if a.name == b.name and a.location == b.location and \
+                abs(a.first_week - b.first_week) == 1 and \
+                abs(a.last_week - b.last_week) == 1 and \
+                a.interval == b.interval == 2:
+            a.first_week = min(a.first_week, b.first_week)
+            a.last_week = max(a.last_week, b.last_week)
+            a.interval = 1
+            return (a,)
+        return pair
 
-    def trymerge(self, b):
-        if self.name == b.name and self.location == b.location and \
-                abs(self.first_week - b.first_week) <= 1 and \
-                abs(self.last_week - b.last_week) <= 1 and \
-                self.interval == b.interval == 2:
-            self.first_week = min(self.first_week, b.first_week)
-            self.last_week = max(self.last_week, b.last_week)
-            self.interval = 1
-            return True
+
+class CalStylePolicyBase(metaclass=ABCMeta):
+    def __init__(self, firstday):
+        self.calc_dt = school_cal_generator(firstday)
+
+    def _common_vars(self, item):
+        _cnt = (item.last_week - item.first_week) // item.interval + 1
+        rrule = ICSCreator.rrule(item.interval, _cnt) if _cnt > 1 else None
+        dtstart = self.calc_dt(item.first_week, item.weekday, item.start_time)
+        dtend = self.calc_dt(item.first_week, item.weekday, item.end_time)
+        return rrule, dtstart, dtend
+    
+    @abstractmethod
+    def add_event(self, cal, item):
+        pass
+
+
+class NameAtLocPolicy(CalStylePolicyBase):
+    def add_event(self, cal, item):
+        rrule, dtstart, dtend = self._common_vars(item)
+        cal.add_event(
+            '%s@%s' % (item.name, item.location), dtstart, dtend,
+            rrule=rrule
+        )
+
+
+class IndependentLocPolicy(CalStylePolicyBase):
+    def add_event(self, cal, item):
+        rrule, dtstart, dtend = self._common_vars(item)
+        cal.add_event(
+            item.name, dtstart, dtend, item.location,
+            rrule=rrule
+        )
+
+
+class NotesPolicyBase(metaclass=ABCMeta):
+    def need_note(self, item) -> bool:
         return False
 
+    def magic_note(self, item) -> 'list of items':
+        return [item]
 
-def proc_lesson(tdobj, linenum, rownum, rowspan):
-    # convert
-    weekday = linenum
-    starting = starting_timelist[rownum]
-    ending = ending_timelist[rownum + rowspan - 1]
-    texts = (
-        i for i in tdobj.contents
-        if isinstance(i, str) and i.strip()
-    )
-    lesson_templist = [
-        LessonTemp(*lesson_pattern.fullmatch(i).groups())
-        for i in texts
+
+class NoNotesPolicy(NotesPolicyBase):
+    pass
+
+
+class PEXCNotePolicy(NotesPolicyBase):
+    def need_note(self, item):
+        return any(s in item.name for s in ['体育', '形势与政策'])
+
+    def magic_note(self, item):
+        return super().magic_note(item)
+
+
+class FullNotesPolicy(NotesPolicyBase):
+    def need_note(self, item):
+        return True
+
+
+class PageParser:
+    starting_timelist = [
+        dt.time(7+i, 55) if i % 2 else dt.time(8+i, 0)
+        for i in range(14)
     ]
-    # merge
-    if len(lesson_templist) == 2:
-        a, b = lesson_templist
-        if a.trymerge(b):
-            lesson_templist.pop()
-    # final
-    lesson_info = [
-        LessonInfo(
-            item.name, item.first_week, item.last_week, item.location,
-            item.interval, starting, ending, weekday
-        ) for item in lesson_templist
-    ]
-    return lesson_info
-
-
-def parse_note(url):
-    rsp = requests.get(url)
-    soup = BeautifulSoup(rsp, 'html.parser')
-    tr = soup.find(id='LessonArrangeDetail1_dataListKc').tr.find_all('tr')[-1]
-    text = tr.text.strip()
-    if text == '备注：':
-        return ''
-    return text
-
-
-def extract_notes_url(soup):
-    note_table = soup.find('table', id='Datagrid1')
-    notes_url = {}
+    ending_timelist = [dt.time(8+i, 40 if i % 2 else 45) for i in range(14)]
     base_url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
-    for trobj in note_table.find_all('tr')[1:]:
-        tdlist = trobj.find_all('td')
-        name = tdlist[1].text.strip()
-        notes_url[name] = parse.urljoin(base_url, tdlist[3].a['href'])
-    return notes_url
 
+    @classmethod
+    def calc_timespan(cls, rownum, rownspan):
+        starting = cls.starting_timelist[rownum]
+        ending = cls.ending_timelist[rownum + rowspan - 1]
+        return starting, ending
 
-def extract_lessons_from_soup(soup):
-    notes_url = extract_notes_url(soup)
-    tbody = soup.find(class_='alltab')
-    takenup = [[False for i in range(7)] for j in range(14)]
-    lesson_list = []
-    for rownum, trobj in enumerate(tbody.find_all('tr')[1:]):
-        tdit = iter(trobj.find_all('td'))
-        next(tdit)
-        for linenum in range(7):
-            if takenup[rownum][linenum]:
-                continue
-            tdobj = next(tdit)
-            if tdobj.text.strip():
-                rowspan = int(tdobj.attrs.get('rowspan', 1))
-                for i in range(rowspan):
-                    takenup[rownum + i][linenum] = True
-                lesson_list.extend(proc_lesson(tdobj, linenum, rownum, rowspan))
-    return lesson_list
+    def __init__(self, session, calstylehandler, noteshandler):
+        self.session = session
+        self.calstylehandler = calstylehandler
+        self.noteshandler = noteshandler
+    
+    def main(self):
+        rsp = self.session.get(self.base_url)
+        self.soup = BeautifulSoup(rsp.text, 'html.parser')
+        self.extract_notes_url()
+        raw = self.extract_raw_from_soup()
+        converted = self.convert_and_merge_lessons(raw)
+        final = self.handle_description(converted)
+        return self.generate_ics(final)
+
+    def handle_description(self, converted_iterable):
+        for item in converted_iterable:
+            if self.noteshandler.need_note(item):
+                self.get_note(item)
+                yield from self.noteshandler.magic_note(item)
+            else:
+                yield item
+
+    def convert_and_merge_lessons(self, raw_iterable):
+        for texts, ln, rn, rs in raw_iterable:
+            op, ed = self.calc_timespan(rn, rs)
+            lst = [LessonInfo(t, ln, op, ed) for t in texts]
+            if len(lst) == 2:
+                LessonInfo.trymerge(lst)
+            yield from lst
+
+    def extract_raw_from_soup(self):
+        tbody = self.soup.find(class_='alltab')
+        takenup = [[False for i in range(7)] for j in range(14)]
+        for rownum, trobj in enumerate(tbody.find_all('tr')[1:]):
+            tdit = iter(trobj.find_all('td'))
+            next(tdit)
+            for linenum in range(7):
+                if takenup[rownum][linenum]:
+                    continue
+                tdobj = next(tdit)
+                if tdobj.text.strip():
+                    rowspan = int(tdobj.attrs.get('rowspan', 1))
+                    for i in range(rowspan):
+                        takenup[rownum + i][linenum] = True
+                    texts = [
+                        i for i in tdobj.contents
+                        if isinstance(i, str) and i.strip()
+                    ]
+                    yield texts, linenum, rownum, rowspan
+
+    def extract_notes_url(self):
+        note_table = self.soup.find('table', id='Datagrid1')
+        self.notes_url = {}
+        for trobj in note_table.find_all('tr')[1:]:
+            tdlist = trobj.find_all('td')
+            name = tdlist[1].text.strip()
+            href = tdlist[3].a['href']
+            self.notes_url[name] = parse.urljoin(self.base_url, href)
+
+    def get_note(self, item):
+        rsp = requests.get(self.notes_url[item.name])
+        soup = BeautifulSoup(rsp, 'html.parser')
+        tr = soup.find(id='LessonArrangeDetail1_dataListKc').tr.find_all('tr')[-1]
+        # TODO testing needed
+        text = tr.text.strip()[3:].strip()
+        item.description = text
+
+    def generate_ics(self, lesson_list):
+        cal = ICSCreator()
+        for item in lesson_list:
+            self.calstylehandler.add_event(cal, item)
+        return cal
 
 
 class ElectSysManager(JAccountLoginManager):
@@ -153,11 +206,7 @@ class ElectSysManager(JAccountLoginManager):
             if msg:
                 return 'ElectSys says: ' + msg
         return '未知错误'
-
-    def convert_lessons_to_ics(self, firstday, locstyle='name@loc'):
-        assert locstyle in {'name@loc', 'LOC'}
-        url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
-        rsp = self.session.get(url)
-        soup = BeautifulSoup(rsp.text, 'html.parser')
-        lesson_list = extract_lessons_from_soup(soup)
-        return generate_ics(lesson_list, firstday, locstyle)
+    
+    def convert_lessons_to_ics(self, firstday, calstylepolicy, notespolicy):
+        parser = PageParser(self.session, calstylepolicy(firstday), notespolicy())
+        return parser.main()
