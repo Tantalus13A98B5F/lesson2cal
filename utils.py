@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from functools import wraps
 from random import random
 from urllib import parse
+import datetime as dt
 import logging
 import requests
 
@@ -16,6 +17,13 @@ def get_random():
 def take_qs(url):
     splitted = parse.urlsplit(url)
     return parse.parse_qs(splitted.query)
+
+
+def shift_days_generator(firstday):
+    def real(week, day, time):
+        shift = dt.timedelta(days=(week-1)*7 + day)
+        return dt.datetime.combine(firstday, time) + shift
+    return real
 
 
 def with_max_retries(count):

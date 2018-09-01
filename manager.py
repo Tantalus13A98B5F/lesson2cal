@@ -2,7 +2,7 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 import datetime as dt
 import re
-from utils import JAccountLoginManager, take_qs
+from utils import JAccountLoginManager, take_qs, shift_days_generator
 from ics import ICSCreator
 
 
@@ -21,17 +21,23 @@ ending_timelist = [dt.time(8+i, 40 if i % 2 else 45) for i in range(14)]
 lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
 
 
-def generate_ics(lesson_list, firstday):
+def generate_ics(lesson_list, firstday, style):
     cal = ICSCreator()
+    calc_datetime = shift_days_generator(firstday)
     for item in lesson_list:
-        shift_days = dt.timedelta(days=(item.first_week - 1)*7 + item.weekday)
         count = (item.last_week - item.first_week) // item.interval + 1
-        dtstart = dt.datetime.combine(firstday, item.start_time) + shift_days
-        dtend = dt.datetime.combine(firstday, item.end_time) + shift_days
-        cal.add_event(
-            item.name, dtstart, dtend, item.location,
-            rrule=cal.rrule(item.interval, count)
-        )
+        dtstart = calc_datetime(item.first_week, item.weekday, item.start_time)
+        dtend = calc_datetime(item.first_week, item.weekday, item.end_time)
+        if style == 'name@loc':
+            cal.add_event(
+                '%s@%s' % (item.name, item.location), dtstart, dtend,
+                rrule=cal.rrule(item.interval, count)
+            )
+        else:  # style == 'LOC'
+            cal.add_event(
+                item.name, dtstart, dtend, item.location,
+                rrule=cal.rrule(item.interval, count)
+            )
     return cal
 
 
@@ -126,9 +132,10 @@ class ElectSysManager(JAccountLoginManager):
                 return 'ElectSys says: ' + msg
         return '未知错误'
 
-    def convert_lessons_to_ics(self, firstday):
+    def convert_lessons_to_ics(self, firstday, style='name@loc'):
+        assert style in {'name@loc', 'LOC'}
         url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
         rsp = self.session.get(url)
         soup = BeautifulSoup(rsp.text, 'html.parser')
         lesson_list = extract_lessons_from_soup(soup)
-        return generate_ics(lesson_list, firstday)
+        return generate_ics(lesson_list, firstday, style)
