@@ -2,8 +2,7 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 import datetime as dt
 import re
-from utils import JAccountLoginManager, take_qs, shift_days_generator
-from ics import ICSCreator
+from utils import *
 
 
 LessonInfo = namedtuple(
@@ -23,7 +22,7 @@ lesson_pattern = re.compile(r'(.+)（(\d+)-(\d+)周）\[(.+)\](.周)?')
 
 def generate_ics(lesson_list, firstday, style):
     cal = ICSCreator()
-    calc_datetime = shift_days_generator(firstday)
+    calc_datetime = school_cal_generator(firstday)
     for item in lesson_list:
         count = (item.last_week - item.first_week) // item.interval + 1
         dtstart = calc_datetime(item.first_week, item.weekday, item.start_time)

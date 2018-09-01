@@ -5,8 +5,10 @@ from urllib import parse
 import datetime as dt
 import logging
 import requests
+from ics import ICSCreator
 
 
+__all__ = ['take_qs', 'school_cal_generator', 'with_max_retries', 'JAccountLoginManager', 'ICSCreator']
 logger = logging.getLogger('lesson2cal')
 
 
@@ -19,7 +21,7 @@ def take_qs(url):
     return parse.parse_qs(splitted.query)
 
 
-def shift_days_generator(firstday):
+def school_cal_generator(firstday):
     def real(week, day, time):
         shift = dt.timedelta(days=(week-1)*7 + day)
         return dt.datetime.combine(firstday, time) + shift
