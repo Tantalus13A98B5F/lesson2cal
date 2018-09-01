@@ -22,6 +22,7 @@ def take_qs(url):
 
 
 def school_cal_generator(firstday):
+    assert firstday.weekday() == 0
     def real(week, day, time):
         shift = dt.timedelta(days=(week-1)*7 + day)
         return dt.datetime.combine(firstday, time) + shift

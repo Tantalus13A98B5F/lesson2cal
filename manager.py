@@ -1,5 +1,6 @@
 from collections import namedtuple
 from bs4 import BeautifulSoup
+from urllib import parse
 import datetime as dt
 import re
 from utils import *
@@ -94,8 +95,30 @@ def proc_lesson(tdobj, linenum, rownum, rowspan):
     return lesson_info
 
 
+def parse_note(url):
+    rsp = requests.get(url)
+    soup = BeautifulSoup(rsp, 'html.parser')
+    tr = soup.find(id='LessonArrangeDetail1_dataListKc').tr.find_all('tr')[-1]
+    text = tr.text.strip()
+    if text == '备注：':
+        return ''
+    return text
+
+
+def extract_notes_url(soup):
+    note_table = soup.find('table', id='Datagrid1')
+    notes_url = {}
+    base_url = 'http://electsys.sjtu.edu.cn/edu/newsBoard/newsInside.aspx'
+    for trobj in note_table.find_all('tr')[1:]:
+        tdlist = trobj.find_all('td')
+        name = tdlist[1].text.strip()
+        notes_url[name] = parse.urljoin(base_url, tdlist[3].a['href'])
+    return notes_url
+
+
 def extract_lessons_from_soup(soup):
-    tbody = soup.find(attrs={'class': 'alltab'})
+    notes_url = extract_notes_url(soup)
+    tbody = soup.find(class_='alltab')
     takenup = [[False for i in range(7)] for j in range(14)]
     lesson_list = []
     for rownum, trobj in enumerate(tbody.find_all('tr')[1:]):
