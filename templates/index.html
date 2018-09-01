@@ -31,10 +31,18 @@
               </div>
               <el-input name="captcha" required></el-input>
             </el-form-item>
+            <!-- 以下非el-input，必须v-model，且不支持required -->
             <el-form-item label="学期首周周一日期">
-              <!-- 必须v-model，且不支持required -->
               <el-date-picker style="width:100%;" v-model="firstday" name="firstday"
                 :picker-options="pickerOptions" format="yyyy/MM/dd"></el-date-picker>
+            </el-form-item>
+            <!-- 以下为el-select，默认提交label，非常过分 -->
+            <el-form-item label="你希望如何显示地点信息">
+              <el-select v-model="locstyle" style="width:100%;">
+                <el-option label="显示在标题里，形如'名称@地点'" value="name@loc"></el-option>
+                <el-option label="显示在地点栏里（有时此栏不会显示）" value="LOC"></el-option>
+              </el-select>
+              <input type="text" v-show="false" name="locstyle" :value="locstyle">
             </el-form-item>
             <el-button @click="submit">提交</el-button>
           </el-form>
@@ -46,7 +54,8 @@
     var app = new Vue({
       el: '#app',
       data: {
-        firstday: '',
+        firstday: null,
+        locstyle: 'name@loc',
         pickerOptions: {
           disabledDate (date) {
             return date.getDay() != 1
@@ -56,7 +65,7 @@
       methods: {
         submit () {
           let form = this.$refs.mainform.$el
-          if (form.checkValidity() && this.firstday.length) {
+          if (form.checkValidity() && this.firstday) {
             form.submit()
           } else {
             this.$message({

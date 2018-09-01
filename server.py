@@ -44,12 +44,14 @@ def post_view():
         captcha = flask.request.form['captcha']
         firstday_raw = flask.request.form['firstday']
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
+        locstyle = flask.request.form['locstyle']
+        {'name@loc', 'LOC'}.remove(locstyle)
     except (KeyError, ValueError, TypeError):
         return redirect_error('参数错误')
     manager.store_variables()
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
-        cal = manager.convert_lessons_to_ics(firstday)
+        cal = manager.convert_lessons_to_ics(firstday, locstyle)
         response = flask.make_response(cal.serialize())
         response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
