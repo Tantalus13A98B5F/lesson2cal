@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from bs4 import BeautifulSoup
+from time import sleep
 from urllib import parse
 import datetime as dt
+import logging
 import re
 from utils import *
 
@@ -10,6 +12,7 @@ __all__ = [
     'ElectSysManager', 'NameAtLocPolicy', 'IndependentLocPolicy', 
     'NoNotesPolicy', 'PEXCNotePolicy', 'FullNotesPolicy'
 ]
+logger = logging.getLogger('lesson2cal')
 
 
 class LessonInfo:
@@ -68,7 +71,7 @@ class NameAtLocPolicy(CalStylePolicyBase):
         rrule, dtstart, dtend = self._common_vars(item)
         cal.add_event(
             '%s@%s' % (item.name, item.location), dtstart, dtend,
-            rrule=rrule
+            description=item.description, rrule=rrule
         )
 
 
@@ -77,7 +80,7 @@ class IndependentLocPolicy(CalStylePolicyBase):
         rrule, dtstart, dtend = self._common_vars(item)
         cal.add_event(
             item.name, dtstart, dtend, item.location,
-            rrule=rrule
+            description=item.description, rrule=rrule
         )
 
 
@@ -126,7 +129,9 @@ class PageParser:
         self.noteshandler = noteshandler
     
     def main(self):
+        logger.info('GET %s', self.base_url)
         rsp = self.session.get(self.base_url)
+        logger.info('page return %s: %s', rsp.status_code, rsp.request.url)
         self.soup = BeautifulSoup(rsp.text, 'html.parser')
         self.extract_notes_url()
         raw = self.extract_raw_from_soup()
@@ -179,9 +184,21 @@ class PageParser:
             href = tdlist[3].a['href']
             self.notes_url[name] = parse.urljoin(self.base_url, href)
 
+    @with_max_retries(2)
     def get_note(self, item):
-        rsp = requests.get(self.notes_url[item.name])
-        soup = BeautifulSoup(rsp, 'html.parser')
+        url = self.notes_url[item.name]
+        sleep(5)
+        logger.info('GET %s', url)
+        rsp = self.session.get(url)
+        logger.info('page return %s: %s', rsp.status_code, rsp.request.url)
+        if rsp.request.url != url:
+            qs = take_qs(rsp.request.url)
+            msg = qs.get('message', [''])[0]
+            logger.info('ElectSys say: %s', msg)
+            logger.info('will retry after 1 min')
+            sleep(60)
+            raise Exception('retry plz')
+        soup = BeautifulSoup(rsp.text, 'html.parser')
         tr = soup.find(id='LessonArrangeDetail1_dataListKc').tr.find_all('tr')[-1]
         # TODO testing needed
         text = tr.text.strip()[3:].strip()

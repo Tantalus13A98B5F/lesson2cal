@@ -44,6 +44,13 @@
               </el-select>
               <input type="text" v-show="false" name="locstyle" :value="locstyle">
             </el-form-item>
+            <el-form-item label="你希望如何处理备注">
+              <el-select v-model="notespolicy" style="width:100%;">
+                <el-option label="我不需要备注" value="nonotes"></el-option>
+                <el-option label="我需要所有备注（即使我可能被服务器续命）" value="fullnotes"></el-option>
+              </el-select>
+              <input type="text" v-show="false" name="notespolicy" :value="notespolicy">
+            </el-form-item>
             <el-button @click="submit">提交</el-button>
           </el-form>
         </el-card>
@@ -56,6 +63,7 @@
       data: {
         firstday: null,
         locstyle: 'name@loc',
+        notespolicy: 'nonotes',
         pickerOptions: {
           disabledDate (date) {
             return date.getDay() != 1

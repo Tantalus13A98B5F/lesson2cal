@@ -8,7 +8,10 @@ import requests
 from ics import ICSCreator
 
 
-__all__ = ['take_qs', 'school_cal_generator', 'with_max_retries', 'JAccountLoginManager', 'ICSCreator']
+__all__ = [
+    'take_qs', 'school_cal_generator', 'with_max_retries',
+    'JAccountLoginManager', 'ICSCreator'
+]
 logger = logging.getLogger('lesson2cal')
 
 
@@ -91,5 +94,5 @@ class JAccountLoginManager(metaclass=ABCMeta):
         payload = {'user': user, 'pass': passwd, 'captcha': captcha}
         payload.update(self.variables)
         rsp = self.session.post(action_url, payload)
-        logger.info('post return at: %s', rsp.request.url)
+        logger.info('login post return at: %s', rsp.request.url)
         return self.check_login_result(rsp)

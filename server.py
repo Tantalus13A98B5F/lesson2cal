@@ -16,6 +16,15 @@ app = flask.Flask(__name__)
 manager = ElectSysManager()
 threading.Timer(2, lambda: webbrowser.open('http://localhost:5000/')).start()
 
+CalStylePolicies = {
+    'name@loc': NameAtLocPolicy,
+    'LOC': IndependentLocPolicy
+}
+NotesPolicies = {
+    'nonotes': NoNotesPolicy,
+    'fullnotes': FullNotesPolicy
+}
+
 
 def redirect_error(msg):
     return flask.redirect('/?' + parse.urlencode({'error': msg}))
@@ -44,18 +53,14 @@ def post_view():
         captcha = flask.request.form['captcha']
         firstday_raw = flask.request.form['firstday']
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
-        locstyle = flask.request.form['locstyle']
-        locstyle_data = {
-            'name@loc': NameAtLocPolicy,
-            'LOC': IndependentLocPolicy
-        }
-        locstyle_policy = locstyle_data[locstyle]
+        calstylepolicy = CalStylePolicies[flask.request.form['locstyle']]
+        notespolicy = NotesPolicies[flask.request.form['notespolicy']]
     except (KeyError, ValueError, TypeError):
         return redirect_error('参数错误')
     manager.store_variables()
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
-        cal = manager.convert_lessons_to_ics(firstday, locstyle_policy, NoNotesPolicy)
+        cal = manager.convert_lessons_to_ics(firstday, calstylepolicy, notespolicy)
         response = flask.make_response(cal.serialize())
         response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'
