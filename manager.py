@@ -116,7 +116,7 @@ class PEXCNotePolicy(NotesPolicyBase):
             return super().expand_note(item)
 
 
-class FullNotesPolicy(NotesPolicyBase):
+class FullNotesPolicy(PEXCNotePolicy):
     def need_note(self, item):
         return True
 
