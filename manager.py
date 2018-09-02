@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from bs4 import BeautifulSoup
+from copy import copy
 from time import sleep
 from urllib import parse
 import datetime as dt
@@ -97,11 +98,22 @@ class NoNotesPolicy(NotesPolicyBase):
 
 
 class PEXCNotePolicy(NotesPolicyBase):
+    _regex = re.compile('\d+')
+
     def need_note(self, item):
         return any(s in item.name for s in ['体育', '形势与政策'])
 
     def expand_note(self, item):
-        return super().expand_note(item)
+        if '形势与政策' in item.name:
+            weeks = [int(i) for i in self._regex.findall(item.description)]
+            ret = []
+            for wk in weeks:
+                new = copy(item)
+                new.first_week = new.last_week = wk
+                ret.append(new)
+            return ret
+        else:
+            return super().expand_note(item)
 
 
 class FullNotesPolicy(NotesPolicyBase):
@@ -199,9 +211,9 @@ class PageParser:
             sleep(60)
             raise Exception('retry plz')
         soup = BeautifulSoup(rsp.text, 'html.parser')
-        tr = soup.find(id='LessonArrangeDetail1_dataListKc').tr.find_all('tr')[-1]
-        # TODO testing needed
-        text = tr.text.strip()[3:].strip()
+        note_regex = re.compile('备注.*')
+        td = soup.find('td', text=note_regex)
+        text = td.text[3:].strip()
         item.description = text
 
     def generate_ics(self, lesson_list):
