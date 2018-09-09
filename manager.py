@@ -10,8 +10,8 @@ from utils import *
 
 
 __all__ = [
-    'ElectSysManager', 'NameAtLocPolicy', 'IndependentLocPolicy', 
-    'NoNotesPolicy', 'PEXCNotePolicy', 'FullNotesPolicy'
+    'ElectSysManager', 'NameAtLocPolicy', 'IndependentLocPolicy',
+    'NoNotesPolicy', 'UnknownLocationNotePolicy', 'ULXCNotePolicy', 'FullNotesPolicy'
 ]
 logger = logging.getLogger('lesson2cal')
 
@@ -37,7 +37,7 @@ class LessonInfo:
                 self.first_week += 1
             if self.last_week % 2 != remainder:
                 self.last_week -= 1
-    
+
     @classmethod
     def trymerge(cls, lst):
         a, b = lst
@@ -61,7 +61,7 @@ class CalStylePolicyBase(metaclass=ABCMeta):
         dtstart = self.calc_dt(item.first_week, item.weekday, item.start_time)
         dtend = self.calc_dt(item.first_week, item.weekday, item.end_time)
         return rrule, dtstart, dtend
-    
+
     @abstractmethod
     def add_event(self, cal, item):
         pass
@@ -97,11 +97,16 @@ class NoNotesPolicy(NotesPolicyBase):
     pass
 
 
-class PEXCNotePolicy(NotesPolicyBase):
+class UnknownLocationNotePolicy(NotesPolicyBase):
+    def need_note(self, item):
+        return '未定' in item.location
+
+
+class ULXCNotePolicy(UnknownLocationNotePolicy):
     _regex = re.compile('\d+')
 
     def need_note(self, item):
-        return any(s in item.name for s in ['体育', '形势与政策'])
+        return super().need_note(item) or '形势与政策' in item.name
 
     def expand_note(self, item):
         if '形势与政策' in item.name:
@@ -116,7 +121,7 @@ class PEXCNotePolicy(NotesPolicyBase):
             return super().expand_note(item)
 
 
-class FullNotesPolicy(PEXCNotePolicy):
+class FullNotesPolicy(ULXCNotePolicy):
     def need_note(self, item):
         return True
 
@@ -139,7 +144,7 @@ class PageParser:
         self.session = session
         self.calstylehandler = calstylehandler
         self.noteshandler = noteshandler
-    
+
     def main(self):
         logger.info('GET %s', self.base_url)
         rsp = self.session.get(self.base_url)
@@ -240,7 +245,7 @@ class ElectSysManager(JAccountLoginManager):
             if msg:
                 return 'ElectSys says: ' + msg
         return '未知错误'
-    
+
     def convert_lessons_to_ics(self, firstday, calstylepolicy, notespolicy):
         parser = PageParser(self.session, calstylepolicy(firstday), notespolicy())
         return parser.main()
