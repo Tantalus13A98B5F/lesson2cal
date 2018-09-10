@@ -22,7 +22,7 @@ CalStylePolicies = {
 }
 NotesPolicies = {
     'nonotes': NoNotesPolicy,
-    'ulnotes': UnknownLocationNotePolicy,
+    'xcnotes': XCNotePolicy,
     'ulxcnotes': ULXCNotePolicy,
     'fullnotes': FullNotesPolicy
 }

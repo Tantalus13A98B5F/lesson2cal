@@ -11,7 +11,7 @@ from utils import *
 
 __all__ = [
     'ElectSysManager', 'NameAtLocPolicy', 'IndependentLocPolicy',
-    'NoNotesPolicy', 'UnknownLocationNotePolicy', 'ULXCNotePolicy', 'FullNotesPolicy'
+    'NoNotesPolicy', 'XCNotePolicy', 'ULXCNotePolicy', 'FullNotesPolicy'
 ]
 logger = logging.getLogger('lesson2cal')
 
@@ -97,16 +97,11 @@ class NoNotesPolicy(NotesPolicyBase):
     pass
 
 
-class UnknownLocationNotePolicy(NotesPolicyBase):
-    def need_note(self, item):
-        return '未定' in item.location
-
-
-class ULXCNotePolicy(UnknownLocationNotePolicy):
+class XCNotePolicy(NotesPolicyBase):
     _regex = re.compile('\d+')
 
     def need_note(self, item):
-        return super().need_note(item) or '形势与政策' in item.name
+        return '形势与政策' in item.name
 
     def expand_note(self, item):
         if '形势与政策' in item.name:
@@ -119,6 +114,12 @@ class ULXCNotePolicy(UnknownLocationNotePolicy):
             return ret
         else:
             return super().expand_note(item)
+
+
+class ULXCNotePolicy(XCNotePolicy):
+    '''UL -> Unknown Location'''
+    def need_note(self, item):
+        return super().need_note(item) or '未定' in item.location
 
 
 class FullNotesPolicy(ULXCNotePolicy):

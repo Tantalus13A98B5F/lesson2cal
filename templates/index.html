@@ -47,8 +47,8 @@
             <el-form-item label="你希望如何处理备注">
               <el-select v-model="notespolicy" style="width:100%;">
                 <el-option label="我不需要备注（无法特殊处理形策）" value="nonotes"></el-option>
-                <el-option label="我需要教室未定的课程备注（如体育等）" value="ulnotes"></el-option>
-                <el-option label="我需要教室未定的课程和形策的备注" value="ulxcnotes"></el-option>
+                <el-option label="我只需要形策的备注" value="xcnotes"></el-option>
+                <el-option label="我需要形策和教室未定的课程备注（如体育等）" value="ulxcnotes"></el-option>
                 <el-option label="我需要所有备注（即使可能耗时极长）" value="fullnotes"></el-option>
               </el-select>
               <input type="text" v-show="false" name="notespolicy" :value="notespolicy">
