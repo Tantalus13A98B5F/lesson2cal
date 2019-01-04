@@ -20,12 +20,6 @@ CalStylePolicies = {
     'name@loc': NameAtLocPolicy,
     'LOC': IndependentLocPolicy
 }
-NotesPolicies = {
-    'nonotes': NoNotesPolicy,
-    'xcnotes': XCNotePolicy,
-    'ulxcnotes': ULXCNotePolicy,
-    'fullnotes': FullNotesPolicy
-}
 
 
 def redirect_error(msg):
@@ -36,6 +30,7 @@ def redirect_error(msg):
 def index_view():
     error = flask.request.args.get('error', '')
     manager.new_session()
+    manager.store_variables()
     return flask.render_template('index.html', error=error)
 
 
@@ -56,13 +51,11 @@ def post_view():
         firstday_raw = flask.request.form['firstday']
         firstday = dt.date(*[int(i) for i in firstday_raw.split('/')])
         calstylepolicy = CalStylePolicies[flask.request.form['locstyle']]
-        notespolicy = NotesPolicies[flask.request.form['notespolicy']]
     except (KeyError, ValueError, TypeError):
         return redirect_error('参数错误')
-    manager.store_variables()
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
-        cal = manager.convert_lessons_to_ics(firstday, calstylepolicy, notespolicy)
+        cal = manager.convert_lessons_to_ics(firstday, calstylepolicy)
         response = flask.make_response(cal.serialize())
         response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename="output.ics"'

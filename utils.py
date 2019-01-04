@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from bs4 import BeautifulSoup
 from functools import wraps
 from random import random
 from urllib import parse
@@ -30,6 +31,16 @@ def school_cal_generator(firstday):
         shift = dt.timedelta(days=(week-1)*7 + day)
         return dt.datetime.combine(firstday, time) + shift
     return real
+
+
+def get_start_time(period):
+    i = int(period) - 1
+    return dt.time(7+i, 55) if i % 2 else dt.time(8+i, 0)
+
+
+def get_end_time(period):
+    i = int(period) - 1
+    return dt.time(8+i, 40 if i % 2 else 45)
 
 
 def with_max_retries(count):
@@ -76,11 +87,14 @@ class JAccountLoginManager(metaclass=ABCMeta):
         return ''
 
     @with_max_retries(3)
-    def store_variables(self) -> {'returl', 'se', 'sid'}:
+    def store_variables(self):
         rsp = self.session.get(self.get_login_url())
         logger.info('login page return at: %s', rsp.request.url)
-        qs = take_qs(rsp.request.url)
-        self.variables = {k: qs[k][0] for k in ('returl', 'se', 'sid')}
+        form = BeautifulSoup(rsp.text, 'html.parser').find(id='form-input')
+        self.variables = {
+            it.attrs['name']: it.attrs.get('value', '')
+            for it in form.find_all('input', attrs={'name': True})
+        }
 
     @with_max_retries(3)
     def get_captcha(self) -> ('contenttype', 'body'):
@@ -91,8 +105,10 @@ class JAccountLoginManager(metaclass=ABCMeta):
     @with_max_retries(3)
     def post_credentials(self, user, passwd, captcha) -> bool:
         action_url = 'https://jaccount.sjtu.edu.cn/jaccount/ulogin'
-        payload = {'user': user, 'pass': passwd, 'captcha': captcha}
-        payload.update(self.variables)
+        payload = self.variables.copy()
+        payload['user'] = user
+        payload['pass'] = passwd
+        payload['captcha'] = captcha
         rsp = self.session.post(action_url, payload)
         logger.info('login post return at: %s', rsp.request.url)
         return self.check_login_result(rsp)
