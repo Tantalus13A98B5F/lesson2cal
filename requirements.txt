@@ -9,7 +9,7 @@ Jinja2==2.10
 MarkupSafe==1.0
 python-dateutil==2.7.3
 pytz==2018.5  # for timezone handling
-requests==2.19.1  # for http requests
+requests==2.20.0  # for http requests
 six==1.11.0
 urllib3==1.23
 vobject==0.9.6.1  # for ics generating
