@@ -10,7 +10,7 @@ from ics import ICSCreator
 
 
 __all__ = [
-    'take_qs', 'school_cal_generator', 'with_max_retries', 'ICSCreator'
+    'take_qs', 'school_cal_generator', 'with_max_retries', 'ICSCreator',
     'get_start_time', 'get_end_time', 'JAccountLoginManager'
 ]
 logger = logging.getLogger('lesson2cal')
