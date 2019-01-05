@@ -13,16 +13,18 @@ logger = logging.getLogger('lesson2cal')
 
 class NameAtLocPolicy:
     def add_event(self, cal, item):
-        rrule = ICSCreator.rrule(item['interval'], item['count']) if item['count'] > 1 else None
+        rrule = ICSCreator.rrule(item['interval'], item['count']) \
+            if item['count'] > 1 else None
         cal.add_event(
-            '%s@%s' % (item['name'], item['location']), item['start'], item['end'],
+            item['name'] + '@' + item['location'], item['start'], item['end'],
             description=item['comment'], rrule=rrule
         )
 
 
 class IndependentLocPolicy:
     def add_event(self, cal, item):
-        rrule = ICSCreator.rrule(item['interval'], item['count']) if item['count'] > 1 else None
+        rrule = ICSCreator.rrule(item['interval'], item['count']) \
+            if item['count'] > 1 else None
         cal.add_event(
             item['name'], item['start'], item['end'], item['location'],
             description=item['comment'], rrule=rrule
@@ -51,10 +53,10 @@ class ElectSysManager(JAccountLoginManager):
         info = [
             {
                 'name': obj['kcmc'],
-                'span': obj['jcs'],
                 'location': obj['cdmc'],
                 'weeks': obj['zcd'],
                 'weekday': obj['xqj'],
+                'span': obj['jcs'],
                 'comment': obj['xkbz']
             }
             for obj in rsp2.json()['kbList']
@@ -63,6 +65,7 @@ class ElectSysManager(JAccountLoginManager):
         school_cal = school_cal_generator(firstday)
         weekspat = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
         for item in info:
+            # proc comment
             if item['comment'] == '无':
                 item['comment'] = ''
             # proc weeks
@@ -87,4 +90,3 @@ class ElectSysManager(JAccountLoginManager):
         for item in info:
             calstylehandler.add_event(cal, item)
         return cal
-
