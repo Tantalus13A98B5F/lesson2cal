@@ -5,15 +5,31 @@ from random import random
 from urllib import parse
 import datetime as dt
 import logging
+import sys
+import os
 import requests
 from ics import ICSCreator
 
 
 __all__ = [
-    'take_qs', 'school_cal_generator', 'with_max_retries', 'ICSCreator',
-    'get_start_time', 'get_end_time', 'JAccountLoginManager'
+    'find_data_file', 'load_text_file', 'take_qs', 'with_max_retries',
+    'get_start_time', 'get_end_time', 'proc_week_info',
+    'school_cal_generator', 'ICSCreator', 'JAccountLoginManager'
 ]
 logger = logging.getLogger('lesson2cal')
+
+
+def find_data_file(*fname):
+    if getattr(sys, 'frozen', False):
+        datadir = os.path.dirname(sys.executable)
+    else:
+        datadir = os.path.dirname(__file__)
+    return os.path.join(datadir, *fname)
+
+
+def load_text_file(fname) -> str:
+    with open(fname, encoding='utf-8') as f:
+        return f.read()
 
 
 def get_random():

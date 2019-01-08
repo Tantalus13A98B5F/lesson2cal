@@ -51,7 +51,7 @@ END:VEVENT
 采用`cx_Freeze`进行打包。这个包不在`requirements.txt`中，如有需求请安装`cx-freeze`。
 - 打包请执行`python3 setup.py build`，产物在`build/`中
 - 目前不支持Python 3.7，如有更新强迫受害者请自行解决（x）
-- 目前没有解决相对路径问题，所以请一定在`lesson.exe`所在目录中直接运行
+- 目前没有解决相对路径问题，所以请一定在`lesson2cal.exe`所在目录中直接运行
 - 该脚本可以进行macOS上的打包，还可以用`bdist_dmg`命令生成dmg文件，但是路径和程序的生命周期不可控所以不可用
 
 ## Known Issues

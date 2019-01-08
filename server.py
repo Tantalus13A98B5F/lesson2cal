@@ -6,6 +6,7 @@ import flask
 import threading
 import webbrowser
 from manager import *
+from utils import *
 
 
 logger = logging.getLogger('lesson2cal')
@@ -31,7 +32,8 @@ def index_view():
     error = flask.request.args.get('error', '')
     manager.new_session()
     manager.store_variables()
-    return flask.render_template('index.html', error=error)
+    template = load_text_file(find_data_file('templates', 'index.html'))
+    return flask.render_template_string(template, error=error)
 
 
 @app.route('/captcha')
