@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from collections import namedtuple
 import datetime as dt
 import logging
 import re
@@ -11,23 +12,27 @@ __all__ = [
 logger = logging.getLogger('lesson2cal')
 
 
+LessonInfo = namedtuple('LessonInfo',
+    'name localtion start end interval count comment')
+
+
 class NameAtLocPolicy:
     def add_event(self, cal, item):
-        rrule = ICSCreator.rrule(item['interval'], item['count']) \
-            if item['count'] > 1 else None
+        rrule = ICSCreator.rrule(item.interval, item.count) \
+            if item.count > 1 else None
         cal.add_event(
-            item['name'] + '@' + item['location'], item['start'], item['end'],
-            description=item['comment'], rrule=rrule
+            item.name + '@' + item.location, item.start, item.end,
+            description=item.comment, rrule=rrule
         )
 
 
 class IndependentLocPolicy:
     def add_event(self, cal, item):
-        rrule = ICSCreator.rrule(item['interval'], item['count']) \
-            if item['count'] > 1 else None
+        rrule = ICSCreator.rrule(item.interval, item.count) \
+            if item.count > 1 else None
         cal.add_event(
-            item['name'], item['start'], item['end'], item['location'],
-            description=item['comment'], rrule=rrule
+            item.name, item.start, item.end, item.location,
+            description=item.comment, rrule=rrule
         )
 
 
@@ -44,47 +49,48 @@ class ElectSysManager(JAccountLoginManager):
             return ''
         return '未知错误'
 
-    def convert_lessons_to_ics(self, firstday, calstylepolicy):
-        # get raw data
-        rsp = self.session.get('http://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html')
+    @with_max_retries(3)
+    def _get_raw_data(self):
+        tableurl = 'http://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html'
+        dataurl = 'http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
+        rsp = self.session.get(tableurl)
         soup = BeautifulSoup(rsp.text, 'html.parser')
         args = {k: soup.find(id=k).attrs['value'] for k in ('xnm', 'xqm')}
-        rsp2 = self.session.post('http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html', args)
-        info = [
-            {
-                'name': obj['kcmc'],
-                'location': obj['cdmc'],
-                'weeks': obj['zcd'],
-                'weekday': obj['xqj'],
-                'span': obj['jcs'],
-                'comment': obj['xkbz']
-            }
-            for obj in rsp2.json()['kbList']
+        rsp2 = self.session.post(dataurl, args)
+        return rsp2.json()
+
+    RawLesson = namedtuple('RawLesson',
+        'name location weeks weekday span comment')
+    weekspan_pattern = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
+
+    def _extract_lesson_list(self, rawdata, school_cal):
+        rawlist = [
+            RawLesson(
+                obj['kcmc'], obj['cdmc'], obj['zcd'],
+                obj['xqj'], obj['jcs'], obj['xkbz'])
+            for obj in rawdata['kbList']
         ]
-        # proc data
-        school_cal = school_cal_generator(firstday)
-        weekspat = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
-        for item in info:
-            # proc comment
-            if item['comment'] == '无':
-                item['comment'] = ''
-            # proc weeks
-            fw, lw, oddeven = weekspat.fullmatch(item['weeks']).groups()
+        retlist = []
+        for item in rawlist:
+            match = weekspan_pattern.fullmatch(item.weeks)
+            firstwk, lastwk, oddeven = match.groups()
             oddeven = int(oddeven == '单') if oddeven else None
-            firstweek, lastweek = int(fw), int(lw)
-            if oddeven is not None:
-                if firstweek & 1 != oddeven:
-                    firstweek += 1
-                if lastweek & 1 != oddeven:
-                    lastweek -= 1
-            item['interval'] = 1 if oddeven is None else 2
-            item['count'] = (lastweek - firstweek) // item['interval'] + 1
-            # proc span
-            weekday = int(item['weekday']) - 1
-            a, b = item['span'].split('-')
-            item['start'] = school_cal(firstweek, weekday, get_start_time(a))
-            item['end'] = school_cal(firstweek, weekday, get_end_time(b))
-        # generate cal file
+            firstwk, interv, count = proc_week_info(firstwk, lastwk, oddeven)
+            calc_time = lambda x: school_cal(firstwk, int(item.weekday)-1, x)
+            firstspan, lastspan = item.span.split('-')
+            obj = LessonInfo(
+                item.name, item.localtion,
+                calc_time(get_start_time(firstspan)),
+                calc_time(get_end_time(lastspan)),
+                interv, count,
+                item.comment if item.comment != '无' else '')
+            retlist.append(obj)
+        return retlist
+
+    def convert_lessons_to_ics(self, firstday, calstylepolicy):
+        school_cal = school_cal_generator(firstday)
+        rawdata = self._get_raw_data()
+        info = self._extract_lesson_list(rawdata, school_cal)
         cal = ICSCreator()
         calstylehandler = calstylepolicy()
         for item in info:

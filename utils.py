@@ -34,13 +34,26 @@ def school_cal_generator(firstday):
 
 
 def get_start_time(period):
-    i = int(period) - 1
-    return dt.time(7+i, 55) if i % 2 else dt.time(8+i, 0)
+    period = int(period)
+    if period & 1:
+        return dt.time(7 + period, 0)
+    else:
+        return dt.time(6 + period, 55)
 
 
 def get_end_time(period):
-    i = int(period) - 1
-    return dt.time(8+i, 40 if i % 2 else 45)
+    period = int(period)
+    return dt.time(7 + period, 45 if period & 1 else 40)
+
+
+def proc_week_info(firstwk:str, lastwk:str, oddeven:int) \
+        -> ('firstwk', 'interval', 'count'):
+    firstwk, lastwk = int(firstwk), int(lastwk)
+    if oddeven is not None and firstwk & 1 != oddeven:
+        firstwk += 1
+    interval = 1 if oddeven is None else 2
+    count = (lastwk - firstwk) // interval + 1
+    return firstwk, interval, count
 
 
 def with_max_retries(count):

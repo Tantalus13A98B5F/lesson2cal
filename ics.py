@@ -20,7 +20,8 @@ class ICSCreator:
         self._cal = vobject.iCalendar()
         self._cal.add(vobject.readOne(TIMEZONE, validate=True))
 
-    def add_event(self, title, dtstart, dtend, location='', description='', rrule=None):
+    def add_event(self, title, dtstart, dtend, location='', description='', \
+            rrule=None):
         vevent = self._cal.add('vevent')
         vevent.add('summary').value = title
         vevent.add('dtstart').value = TZAsiaShanghai.localize(dtstart)
