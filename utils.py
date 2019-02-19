@@ -8,13 +8,12 @@ import logging
 import sys
 import os
 import requests
-from ics import ICSCreator
 
 
 __all__ = [
     'find_data_file', 'load_text_file', 'take_qs', 'with_max_retries',
     'get_start_time', 'get_end_time', 'proc_week_info',
-    'school_cal_generator', 'ICSCreator', 'JAccountLoginManager'
+    'school_cal_generator', 'JAccountLoginManager'
 ]
 logger = logging.getLogger('lesson2cal')
 
@@ -43,6 +42,7 @@ def take_qs(url):
 
 def school_cal_generator(firstday):
     assert firstday.weekday() == 0
+
     def real(week, day, time):
         shift = dt.timedelta(days=(week-1)*7 + day)
         return dt.datetime.combine(firstday, time) + shift
@@ -62,7 +62,7 @@ def get_end_time(period):
     return dt.time(7 + period, 45 if period & 1 else 40)
 
 
-def proc_week_info(firstwk:str, lastwk:str, oddeven:int) \
+def proc_week_info(firstwk: str, lastwk: str, oddeven: int) \
         -> ('firstwk', 'interval', 'count'):
     firstwk, lastwk = int(firstwk), int(lastwk)
     if oddeven is not None and firstwk & 1 != oddeven:
@@ -92,7 +92,7 @@ def with_max_retries(count):
 class JAccountLoginManager(metaclass=ABCMeta):
     def __init__(self, session=None):
         self.session = session or requests.Session()
-    
+
     def new_session(self):
         self.session = requests.Session()
 
