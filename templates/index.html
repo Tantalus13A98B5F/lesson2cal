@@ -101,6 +101,7 @@
               <q-input
                 float-label="验证码"
                 v-model="login.form.captcha"
+                @keyup.enter="LoginSubmit"
               />
             </q-field>
           </div>
