@@ -163,6 +163,7 @@ new Vue({
         this.login.form.passwd &&
         this.login.form.captcha
       ) {
+        this.$q.loading.show();
         const params = new URLSearchParams();
         params.append('user', this.login.form.user);
         params.append('passwd', this.login.form.passwd);
@@ -188,6 +189,7 @@ new Vue({
               this.CaptchaRefresh();
               this.login.form.captcha = '';
             }
+            this.$q.loading.hide();
           })
           .catch(err => {
             let message;
@@ -201,6 +203,7 @@ new Vue({
               position: 'top-right'
             });
             console.error(err);
+            this.$q.loading.hide();
           });
       } else {
         this.$q.notify({
