@@ -1,101 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Lesson2Cal</title>
-  <script src="https://cdn.bootcss.com/babel-polyfill/6.26.0/polyfill.min.js"></script>
-  <script src="https://cdn.bootcss.com/vue/2.5.16/vue.min.js"></script>
-  <link href="https://cdn.bootcss.com/element-ui/2.4.0/theme-chalk/index.css" rel="stylesheet">
-  <script src="https://cdn.bootcss.com/element-ui/2.4.0/index.js"></script>
-</head>
-<body>
-  <div id="app">
-    <el-row type="flex" justify="center">
-      <el-col :span="10">
-        <el-card>
-          <div slot="header">配置以下信息</div>
-          <el-form ref="mainform" method="POST" action="/post" label-position="top">
-            <el-form-item label="jAccount">
-              <el-input name="user" required></el-input>
-            </el-form-item>
-            <el-form-item label="密码">
-              <el-input type="password" name="passwd" required></el-input>
-            </el-form-item>
-            <el-form-item>
-              <div slot="label" style="width:150px;">
-                <span>验证码</span>
-                <img style="float:right;" title="点击更换" src="/captcha"
-                  onclick="this.src='/captcha?'+Date.now()+Math.random()">
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"/>
+
+    <title>课程表</title>
+    <link href="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.ios.min.css" rel="stylesheet"/>
+    <link href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.min.css" rel="stylesheet"/>
+
+  </head>
+  <body>
+    <div id="q-app">
+      <div v-if="!login.opened">
+        <div style="height: 5vh"></div>
+        <div class="row justify-center">
+          <div class="col-auto">
+            <q-table
+              :title="TableTitle"
+              :data="lessonList"
+              :columns="columns"
+              :pagination.sync="paginationControl"
+              row-key="name"
+            >
+            <div slot="bottom" slot-scope="props" class="row flex-center fit">
+
+            </div>
+          </q-table>
+          </div>
+        </div>
+        <div class="row justify-center items-center">
+            <div>
+                <table>
+                  <div class="q-subheading">示例</div>
+                  <tr v-for="(value, key) in DisplayTable" :key="key" style="line-height:2em">
+                    <td style="text-align: right">{{ key }}</td> <td>&nbsp;</td> <td style="text-align: left">{{ value }}</td>
+                  </tr>
+                </table>
               </div>
-              <el-input name="captcha" required></el-input>
-            </el-form-item>
-            <!-- 以下非el-input，必须v-model，且不支持required -->
-            <el-form-item label="学期首周周一日期">
-              <el-date-picker style="width:100%;" v-model="firstday" name="firstday"
-                :picker-options="pickerOptions" format="yyyy/MM/dd"></el-date-picker>
-            </el-form-item>
-            <!-- 以下为el-select，默认提交label，非常过分 -->
-            <el-form-item label="你希望如何显示地点信息">
-              <el-select v-model="locstyle" style="width:100%;">
-                <el-option label="显示在标题里，形如'名称@地点'" value="name@loc"></el-option>
-                <el-option label="独立显示在地点栏里" value="LOC"></el-option>
-              </el-select>
-              <input type="text" v-show="false" name="locstyle" :value="locstyle">
-            </el-form-item>
-            <el-form-item label="你希望如何处理备注">
-              <el-select v-model="notespolicy" style="width:100%;">
-                <el-option label="我不需要备注（无法特殊处理形策）" value="nonotes"></el-option>
-                <el-option label="我只需要形策的备注" value="xcnotes"></el-option>
-                <el-option label="我需要形策和教室未定的课程备注（如体育等）" value="ulxcnotes"></el-option>
-                <el-option label="我需要所有备注（即使可能耗时极长）" value="fullnotes"></el-option>
-              </el-select>
-              <input type="text" v-show="false" name="notespolicy" :value="notespolicy">
-            </el-form-item>
-            <el-button @click="submit">提交</el-button>
-          </el-form>
-        </el-card>
-      </el-col>
-    </el-row>
-  </div>
-  <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-        firstday: null,
-        locstyle: 'name@loc',
-        notespolicy: 'ulxcnotes',
-        pickerOptions: {
-          disabledDate (date) {
-            return date.getDay() != 1
-          }
-        }
-      },
-      methods: {
-        submit () {
-          let form = this.$refs.mainform.$el
-          if (form.checkValidity() && this.firstday) {
-            form.submit()
-          } else {
-            this.$message({
-              message: '请填写完所有字段',
-              type: 'warning'
-            })
-          }
-        }
-      },
-      mounted () {
-        // jinja2 arena
-        let error = '{{ error }}'.trim()
-        if (error.length) {
-          this.$message({
-            message: error,
-            type: 'error'
-          })
-        }
-      }
-    })
-  </script>
-</body>
+                <div class="q-ma-xl">
+              <q-option-group
+              type="toggle"
+              v-model="calStyle"
+              @input="calStyleChange"
+              :options="[
+                  {value: 'name', label: '在事件名称中显示地点 Name@Location '},
+                  {value: 'location', label: '上课地点中标明校区 [Campus]Room '},
+                  {value: 'remark', label: '添加选课备注'},
+                  {value: 'teacher', label: '选课备注中写入教师姓名 Teacher | Remark ', disable: !calStyle.includes('remark') }
+              ]"
+            />
+          </div>
+          <div>
+            <q-datetime-picker
+              v-model="firstday"
+              :min = DateRange.min
+              :max = DateRange.max
+              :firstdayofweek = "1"
+              type="date"
+            />
+          </div>
+          <div class="q-ma-xl">
+            <q-btn round color="primary" size="xl" icon="done" @click="StyleSubmit"/>
+          </div>
+        </div>
+      </div>
+      <!-- login -->
+      <q-modal
+        v-model="login.opened"
+        :content-css="{minWidth: '50vw'}"
+        no-backdrop-dismiss="true"
+        :no-esc-dismiss="true"
+      >
+        <div style="padding: 50px; min-width:280px">
+          <div class="q-display-1 q-mb-md">登录Jaccount</div>
+          <div>
+            <q-field class="q-mt-sm" icon="person">
+              <q-input
+                float-label="Jaccount用户名"
+                v-model="login.form.user"
+              />
+            </q-field>
+            <q-field class="q-mt-sm" icon="lock">
+              <q-input
+                type="password"
+                float-label="Jaccount密码"
+                v-model="login.form.passwd"
+              />
+            </q-field>
+            <q-field class="q-mt-sm" icon="verified_user">
+              <img
+                class="float-right q-ml-md"
+                style="cursor: pointer"
+                title="点击更换"
+                :src="login.captchasrc"
+                @click="CaptchaRefresh"
+              >
+              <q-input
+                float-label="验证码"
+                v-model="login.form.captcha"
+                @keyup.enter="LoginSubmit"
+              />
+            </q-field>
+          </div>
+          <div class="row justify-center q-mt-xl">
+            <q-btn label="登录" @click="LoginSubmit" size="form" color="primary" style="width:40%"></q-btn>
+          </div>
+        </div>
+      </q-modal>
+    </div>
+
+    <script src="https://cdn.bootcss.com/babel-polyfill/6.26.0/polyfill.min.js"></script>
+    <script src="https://cdn.bootcss.com/vue/2.6.4/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.ios.umd.min.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+    <script src="static/index.js"></script>
+  </body>
 </html>
