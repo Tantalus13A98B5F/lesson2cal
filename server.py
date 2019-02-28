@@ -23,8 +23,6 @@ threading.Timer(2, lambda: webbrowser.open('http://localhost:5000/')).start()
 def index_view():
     manager.new_session()
     manager.store_variables()
-    # template = load_text_file(find_data_file('templates', 'index.html'))
-    # return flask.render_template_string(template)
     return load_text_file(find_data_file('templates', 'index.html'))
 
 
@@ -44,7 +42,6 @@ def login_view():
         captcha = flask.request.form['captcha']
     except (KeyError, ValueError, TypeError):
         return flask.jsonify({'success': False, 'message': '参数错误'})
-
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
         return flask.jsonify({'success': True, 'data': manager.get_raw_data()})
@@ -60,7 +57,6 @@ def post_view():
         calendar_style = json.loads(flask.request.form['style'])
     except (KeyError, ValueError, TypeError):
         return flask.jsonify({'success': False, 'message': '参数错误'})
-
     cal = manager.convert_lessons_to_ics(firstday, calendar_style)
     response = flask.make_response(cal.serialize())
     response.headers['Content-Type'] = 'text/calendar; charset=utf-8'
