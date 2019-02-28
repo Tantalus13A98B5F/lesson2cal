@@ -15,7 +15,7 @@ new Vue({
         }
       },
       firstday: new Date(2019, 1, 25),
-      calStyle: ['location', 'remark', 'teacher'],
+      calStyle: ['campus', 'remark', 'teacher'],
       paginationControl: {
         rowsPerPage: 25
       },
@@ -107,11 +107,11 @@ new Vue({
         let data = this.lessonList[0];
 
         let loc = data.cdmc;
-        if (this.calStyle.includes('location')) {
+        if (this.calStyle.includes('campus')) {
           loc = `[${data.xqmc}]${data.cdmc}`;
         }
 
-        if (this.calStyle.includes('name')) {
+        if (this.calStyle.includes('name@loc')) {
           table.SUMMARY = `${data.kcmc}@${loc}`;
         } else {
           table.SUMMARY = data.kcmc;

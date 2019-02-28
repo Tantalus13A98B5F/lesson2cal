@@ -33,25 +33,24 @@
         </div>
         <div class="row justify-center items-center">
             <div>
-                <table>
-                  <div class="q-subheading">示例</div>
-                  <tr v-for="(value, key) in DisplayTable" :key="key" style="line-height:2em">
-                    <td style="text-align: right">{{ key }}</td> <td>&nbsp;</td> <td style="text-align: left">{{ value }}</td>
-                  </tr>
-                </table>
-              </div>
-                <div class="q-ma-xl">
+              <table>
+                <div class="q-subheading">示例</div>
+                <tr v-for="(value, key) in DisplayTable" :key="key" style="line-height:2em">
+                  <td style="text-align: right">{{ key }}</td> <td>&nbsp;</td> <td style="text-align: left">{{ value }}</td>
+                </tr>
+              </table>
+            </div>
+            <div class="q-ma-xl">
               <q-option-group
-              type="toggle"
-              v-model="calStyle"
-              @input="calStyleChange"
-              :options="[
-                  {value: 'name', label: '在事件名称中显示地点 Name@Location '},
-                  {value: 'location', label: '上课地点中标明校区 [Campus]Room '},
+                type="toggle"
+                v-model="calStyle"
+                @input="calStyleChange"
+                :options="[
+                  {value: 'name@loc', label: '在事件名称中显示地点 Name@Location '},
+                  {value: 'campus', label: '上课地点中标明校区 [Campus]Room '},
                   {value: 'remark', label: '添加选课备注'},
                   {value: 'teacher', label: '选课备注中写入教师姓名 Teacher | Remark ', disable: !calStyle.includes('remark') }
-              ]"
-            />
+                ]" />
           </div>
           <div>
             <q-datetime-picker

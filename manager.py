@@ -30,10 +30,14 @@ class CalendarStylePolicy:
         else:
             self.summary = lambda it: it.name
             self.location = get_location
-        if 'teacher' in style:
-            self.description = lambda it: it.lecturer + (it.comment and ' | ' + it.comment)
+        if 'remark' in style:
+            if 'teacher' in style:
+                self.description = lambda it: \
+                    it.lecturer + (it.comment and ' | ' + it.comment)
+            else:
+                self.description = lambda it: it.comment
         else:
-            self.description = lambda it: it.comment
+            self.description = return_empty
 
     def __call__(self, cal, item):
         rrule = ICSCreator.rrule(item.interval, item.count) \
