@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from bs4 import BeautifulSoup
 from functools import wraps
 from random import random
+from time import time
 from urllib import parse
 import datetime as dt
 import logging
@@ -29,10 +30,6 @@ def find_data_file(*fname):
 def load_text_file(fname) -> str:
     with open(fname, encoding='utf-8') as f:
         return f.read()
-
-
-def get_random():
-    return random() * 10**8
 
 
 def take_qs(url):
@@ -127,8 +124,10 @@ class JAccountLoginManager(metaclass=ABCMeta):
 
     @with_max_retries(3)
     def get_captcha(self) -> ('contenttype', 'body'):
-        captcha_url = 'https://jaccount.sjtu.edu.cn/jaccount/captcha?%s'
-        rsp = self.session.get(captcha_url % get_random())
+        captcha_url = 'https://jaccount.sjtu.edu.cn/jaccount/captcha'
+        params = {'uuid': self.variables.get('uuid', ''),
+                  't': str(int(1000 * time()))}
+        rsp = self.session.get(captcha_url, params=params)
         return rsp.headers['Content-Type'], rsp.content
 
     @with_max_retries(3)
