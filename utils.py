@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from bs4 import BeautifulSoup
 from functools import wraps
-from random import random
 from time import time
 from urllib import parse
 import datetime as dt
