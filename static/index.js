@@ -14,6 +14,8 @@ new Vue({
           captcha: ''
         }
       },
+      semesters: [],
+      selectedSemester: '',
       firstday: new Date(2019, 1, 25),
       calStyle: ['campus', 'remark', 'teacher'],
       paginationControl: {
@@ -96,6 +98,46 @@ new Vue({
       ]
     };
   },
+  watch: {
+    selectedSemester(newval, oldval) {
+      if (oldval.length == 0) return;
+      this.$q.loading.show();
+      let args = newval.split('-')
+      let params = {params: {xnm: args[0], xqm: args[1]}}
+      axios
+        .get('/data', params)
+        .then(resp => {
+          console.log(resp);
+          if (resp.data.success) {
+            console.log(resp.data.data);
+            this.studentInfo = resp.data.data.xsxx;
+            this.lessonList = resp.data.data.kbList;
+          } else {
+            this.$q.notify({
+              type: 'negative',
+              message: resp.data.message,
+              position: 'center',
+              timeout: 1800
+            });
+          }
+          this.$q.loading.hide();
+        })
+        .catch(err => {
+          let message;
+          if (err.response) {
+            message = `${err.response.status} - ${err.response.statusText}`;
+          }
+          this.$q.notify({
+            type: 'negative',
+            message,
+            detail: JSON.stringify(err),
+            position: 'top-right'
+          });
+          console.error(err);
+          this.$q.loading.hide();
+        });
+    }
+  },
   computed: {
     TableTitle() {
       const { XNMC, XQMMC, XM } = this.studentInfo;
@@ -157,6 +199,25 @@ new Vue({
     CaptchaRefresh() {
       this.login.captchasrc = '/captcha?' + Date.now() + Math.random();
     },
+    UpdateSems(sems) {
+      let first = true;
+      for (let obj of sems) {
+        let xxnm = Number(obj.xnm) + 1
+        let label =
+          (obj.xqm == 3)   ? `${obj.xnm}秋季学期` :
+          ((obj.xqm == 12) ? `${xxnm}春季学期` :
+                             `${xxnm}小学期`);
+        let tmp = {
+          label: label,
+          value: `${obj.xnm}-${obj.xqm}`
+        };
+        if (first) {
+          first = false;
+          this.selectedSemester = tmp.value;
+        }
+        this.semesters.push(tmp);
+      }
+    },
     LoginSubmit() {
       if (
         this.login.form.user &&
@@ -178,6 +239,7 @@ new Vue({
               this.login.opened = false;
               this.studentInfo = resp.data.data.xsxx;
               this.lessonList = resp.data.data.kbList;
+              this.UpdateSems(resp.data.sems);
               // this.schedule = resp.data.data;
             } else {
               this.$q.notify({

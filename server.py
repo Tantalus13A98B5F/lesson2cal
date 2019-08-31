@@ -58,8 +58,8 @@ def login_view():
 def raw_data_view():
     try:
         arg = {
-            'xnm': flask.request.form['xnm'],
-            'xqm': flask.request.form['xqm']
+            'xnm': flask.request.args['xnm'],
+            'xqm': flask.request.args['xqm']
         }
     except (KeyError, ValueError, TypeError):
         return flask.jsonify({'success': False, 'message': '参数错误'})

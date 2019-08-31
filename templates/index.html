@@ -17,6 +17,11 @@
       <div v-if="!login.opened">
         <div style="height: 5vh"></div>
         <div class="row justify-center">
+          <q-field>
+            <q-select v-model="selectedSemester" :options="semesters"></q-select>
+          </q-field>
+        </div>
+        <div class="row justify-center">
           <div class="col-auto">
             <q-table
               :title="TableTitle"
