@@ -68,16 +68,19 @@ class ElectSysManager(JAccountLoginManager):
         }
     
     @with_max_retries(3)
-    def get_current_semester(self):
+    def get_semesters(self):
         tableurl = 'http://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html'
         rsp = self.session.get(tableurl)
         soup = BeautifulSoup(rsp.text, 'html.parser')
-        return {k: soup.find(id=k).attrs['value'] for k in ('xnm', 'xqm')}
+        sfind = lambda k: soup.find(id=k).attrs['value']
+        return [
+            {'xnm': sfind('xnm'), 'xqm': sfind('xqm')},
+            {'xnm': sfind('xxnm'), 'xqm': sfind('xxqm')}
+        ]
 
     @with_max_retries(3)
-    def get_raw_data(self, semester=None):
+    def get_raw_data(self, semester):
         dataurl = 'http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
-        semester = semester or self.get_current_semester()
         rsp2 = self.session.post(dataurl, semester)
         self.raw_data = rsp2.json()
         return self.raw_data
@@ -113,8 +116,7 @@ class ElectSysManager(JAccountLoginManager):
 
     def convert_lessons_to_ics(self, firstday, calendar_style):
         school_cal = school_cal_generator(firstday)
-        rawdata = self.get_raw_data()
-        info = self._extract_lesson_list(rawdata, school_cal)
+        info = self._extract_lesson_list(self.rawdata, school_cal)
         cal = ICSCreator()
         add_event = CalendarStylePolicy(calendar_style)
         for item in info:

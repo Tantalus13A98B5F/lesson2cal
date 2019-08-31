@@ -44,9 +44,29 @@ def login_view():
         return flask.jsonify({'success': False, 'message': '参数错误'})
     error = manager.post_credentials(user, passwd, captcha)
     if not error:
-        return flask.jsonify({'success': True, 'data': manager.get_raw_data()})
+        sems = manager.get_semesters()
+        return flask.jsonify({
+            'success': True,
+            'data': manager.get_raw_data(sems[0]),
+            'sems': sems
+        })
     else:
         return flask.jsonify({'success': False, 'message': error})
+
+
+@app.route('/data')
+def raw_data_view():
+    try:
+        arg = {
+            'xnm': flask.request.form['xnm'],
+            'xqm': flask.request.form['xqm']
+        }
+    except (KeyError, ValueError, TypeError):
+        return flask.jsonify({'success': False, 'message': '参数错误'})
+    return flask.jsonify({
+        'success': True,
+        'data': manager.get_raw_data(arg)
+    })
 
 
 @app.route('/post', methods=['POST'])
