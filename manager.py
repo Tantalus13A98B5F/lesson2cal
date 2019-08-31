@@ -61,14 +61,24 @@ class ElectSysManager(JAccountLoginManager):
             return ''
         return '未知错误'
 
+    def semester_args(self, xnm, xqm):
+        return {
+            'xnm': str(xnm),
+            'xqm': str({1:3, 2:12, 3:16}[int(xqm)])
+        }
+    
     @with_max_retries(3)
-    def get_raw_data(self):
+    def get_current_semester(self):
         tableurl = 'http://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html'
-        dataurl = 'http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
         rsp = self.session.get(tableurl)
         soup = BeautifulSoup(rsp.text, 'html.parser')
-        args = {k: soup.find(id=k).attrs['value'] for k in ('xnm', 'xqm')}
-        rsp2 = self.session.post(dataurl, args)
+        return {k: soup.find(id=k).attrs['value'] for k in ('xnm', 'xqm')}
+
+    @with_max_retries(3)
+    def get_raw_data(self, semester=None):
+        dataurl = 'http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
+        semester = semester or self.get_current_semester()
+        rsp2 = self.session.post(dataurl, semester)
         self.raw_data = rsp2.json()
         return self.raw_data
 
