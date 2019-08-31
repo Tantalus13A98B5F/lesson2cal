@@ -100,7 +100,7 @@ new Vue({
   },
   watch: {
     selectedSemester(newval, oldval) {
-      if (oldval.length == 0) return;
+      if (!oldval.length) return;
       this.$q.loading.show();
       let args = newval.split('-')
       let params = {params: {xnm: args[0], xqm: args[1]}}
@@ -146,6 +146,7 @@ new Vue({
     DisplayTable() {
       if (!this.login.opened) {
         let table = {};
+        if (!this.lessonList.length) return table;
         let data = this.lessonList[0];
 
         let loc = data.cdmc;
