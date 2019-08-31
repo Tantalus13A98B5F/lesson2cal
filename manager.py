@@ -72,11 +72,12 @@ class ElectSysManager(JAccountLoginManager):
         self.raw_data = rsp2.json()
         return self.raw_data
 
-    weekspan_pattern = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
-    RawLesson = namedtuple('RawLesson',
-                           'name campus room weeks weekday span lecturer comment')
-
     def _extract_lesson_list(self, rawdata, school_cal):
+        weekspan_pattern = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
+        RawLesson = namedtuple(
+            'RawLesson',
+            'name campus room weeks weekday span lecturer comment'
+        )
         rawlist = [
             RawLesson(
                 obj['kcmc'], obj['xqmc'], obj['cdmc'], obj['zcd'],
