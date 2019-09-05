@@ -85,7 +85,7 @@ class ElectSysManager(JAccountLoginManager):
         self.raw_data = rsp2.json()
         return self.raw_data
 
-    def _extract_lesson_list(self, rawdata, school_cal):
+    def _extract_lesson_list(self, raw_data, school_cal):
         weekspan_pattern = re.compile(r'(\d+)-(\d+)周(\([单双]\))?')
         RawLesson = namedtuple(
             'RawLesson',
@@ -95,7 +95,7 @@ class ElectSysManager(JAccountLoginManager):
             RawLesson(
                 obj['kcmc'], obj['xqmc'], obj['cdmc'], obj['zcd'],
                 obj['xqj'], obj['jcs'], obj['xm'], obj['xkbz']
-            ) for obj in rawdata['kbList']
+            ) for obj in raw_data['kbList']
         ]
         retlist = []
         for item in rawlist:
@@ -116,7 +116,7 @@ class ElectSysManager(JAccountLoginManager):
 
     def convert_lessons_to_ics(self, firstday, calendar_style):
         school_cal = school_cal_generator(firstday)
-        info = self._extract_lesson_list(self.rawdata, school_cal)
+        info = self._extract_lesson_list(self.raw_data, school_cal)
         cal = ICSCreator()
         add_event = CalendarStylePolicy(calendar_style)
         for item in info:

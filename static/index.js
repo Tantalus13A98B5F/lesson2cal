@@ -16,7 +16,7 @@ new Vue({
       },
       semesters: [],
       selectedSemester: '',
-      firstday: new Date(2019, 1, 25),
+      firstday: new Date(),
       calStyle: ['campus', 'remark', 'teacher'],
       paginationControl: {
         rowsPerPage: 25
