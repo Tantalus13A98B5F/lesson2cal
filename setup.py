@@ -16,8 +16,10 @@ options = {
             'idna.idnadata',
             'jinja2.ext',
         ],
+        'excludes': ['tkinter'],
         'include_files': [
-            'templates'
+            'templates',
+            'static'
         ],
     }
 }
@@ -27,7 +29,7 @@ executables = [
 ]
 
 setup(name='lesson2cal',
-    version='2019.1.8',
+    version='2019.9.7',
     description='',
     options=options,
     executables=executables)
