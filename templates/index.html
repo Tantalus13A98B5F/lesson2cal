@@ -8,7 +8,7 @@
     <meta name="viewport" content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"/>
 
     <title>课程表</title>
-    <link href="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.ios.min.css" rel="stylesheet"/>
+    <link href="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.mat.min.css" rel="stylesheet"/>
     <link href="https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.min.css" rel="stylesheet"/>
 
   </head>
@@ -57,6 +57,8 @@
                   {value: 'teacher', label: '选课备注中写入教师姓名 Teacher | Remark ', disable: !calStyle.includes('remark') }
                 ]" />
           </div>
+        </div>
+        <div class="row justify-center items-center">
           <div>
             <q-datetime-picker
               v-model="firstday"
@@ -118,7 +120,7 @@
 
     <script src="https://cdn.bootcss.com/babel-polyfill/6.26.0/polyfill.min.js"></script>
     <script src="https://cdn.bootcss.com/vue/2.6.4/vue.min.js"></script>
-    <script src="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.ios.umd.min.js"></script>
+    <script src="https://cdn.bootcss.com/quasar-framework/0.17.19/quasar.mat.umd.min.js"></script>
     <script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
     <script src="static/index.js"></script>
   </body>
