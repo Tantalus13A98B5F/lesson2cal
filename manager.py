@@ -50,13 +50,13 @@ class CalendarStylePolicy:
 
 class ElectSysManager(JAccountLoginManager):
     def get_login_url(self):
-        return 'http://i.sjtu.edu.cn/jaccountlogin'
+        return 'https://i.sjtu.edu.cn/jaccountlogin'
 
     def check_login_result(self, rsp):
         ret = super().check_login_result(rsp)
         if ret:
             return ret
-        success_url = 'http://i.sjtu.edu.cn/xtgl/index_initMenu.html'
+        success_url = 'https://i.sjtu.edu.cn/xtgl/index_initMenu.html'
         if rsp.request.url.startswith(success_url):
             return ''
         return '未知错误'
@@ -66,10 +66,10 @@ class ElectSysManager(JAccountLoginManager):
             'xnm': str(xnm),
             'xqm': str({1:3, 2:12, 3:16}[int(xqm)])
         }
-    
+
     @with_max_retries(3)
     def get_semesters(self):
-        tableurl = 'http://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html'
+        tableurl = 'https://i.sjtu.edu.cn/xtgl/index_cxshjdAreaOne.html'
         rsp = self.session.get(tableurl)
         soup = BeautifulSoup(rsp.text, 'html.parser')
         sfind = lambda k: soup.find(id=k).attrs['value']
@@ -80,7 +80,7 @@ class ElectSysManager(JAccountLoginManager):
 
     @with_max_retries(3)
     def get_raw_data(self, semester):
-        dataurl = 'http://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
+        dataurl = 'https://i.sjtu.edu.cn/kbcx/xskbcx_cxXsKb.html'
         rsp2 = self.session.post(dataurl, semester)
         self.raw_data = rsp2.json()
         return self.raw_data
