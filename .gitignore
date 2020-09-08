@@ -2,3 +2,5 @@ venv
 build/*
 .vscode/*
 *.pyc
+# *.ics
+*.csv
