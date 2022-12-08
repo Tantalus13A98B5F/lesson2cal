@@ -1,5 +1,5 @@
 beautifulsoup4==4.8.0  # for page parsing
-certifi==2019.6.16
+certifi==2022.12.7
 chardet==3.0.4
 Click==7.0
 Flask==1.1.1  # for web frontend
